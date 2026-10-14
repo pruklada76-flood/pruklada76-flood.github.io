@@ -10,7 +10,7 @@ data = pathlib.Path(__file__).resolve().parent.parent / "data"
 now = int(time.time() * 1000); fails = []
 
 def get(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "village-flood-dashboard (github.com/wwwiiiwww-collab/village-flood)"})
+    req = urllib.request.Request(url, headers={"User-Agent": "village-flood-dashboard (github.com/pruklada76-flood/pruklada76-flood.github.io)"})
     with urllib.request.urlopen(req, timeout=60) as r: return json.load(r)
 def load(name, default):
     p = data / name
