@@ -1,0 +1,789 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{margin:0;padding:0}</style></head><body>
+<title>สถานการณ์น้ำหมู่บ้าน</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+/* Layout: control-room board, picture first. Hero = live water-system diagram + gauge + countdown; then charts, pumps, levels; text tucked in drawers. */
+:root{
+  --bg:#e9eef0; --panel:#ffffff; --ink:#0f1e26; --ink2:#46585f; --ink3:#71848b; --line:#d3dde0; --grid:#e3eaec;
+  --water:#1f6f9e; --water2:#5aa7d4; --water-soft:#d3e6f1; --rain:#4b5fc7; --rain-soft:#e0e4f8; --soil:#c9b99a; --soil2:#a8977a; --road:#7d8589; --house:#efe8dc; --roof:#b4521a; --sky:#f3f7f9; --metal:#5e6d73; --fc1:#6250d6; --fc2:#c2477a; --fc3:#13946a; --fc4:#8a6d00;
+  --ok:#1d7f4e; --ok-bg:#dcf1e4; --watch:#a07a00; --watch-bg:#fbf0c8; --warn:#c2581b; --warn-bg:#fbe2d2; --crit:#c0291f; --crit-bg:#f9d9d6;
+  --display:"Chakra Petch","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1518; --panel:#142126; --ink:#e7eff1; --ink2:#a9babf; --ink3:#7d9096; --line:#25373d; --grid:#1d2e33;
+  --water:#4fa3d6; --water2:#2f6f96; --water-soft:#183746; --rain:#8796ef; --rain-soft:#232a52; --soil:#4a4234; --soil2:#5d533f; --road:#5b6468; --house:#3a3a36; --roof:#c4683a; --sky:#13202a; --metal:#8a9ba1; --fc1:#9085e9; --fc2:#e87ba4; --fc3:#3cc493; --fc4:#d9b23a;
+  --ok:#57c48b; --ok-bg:#163a28; --watch:#e3bf45; --watch-bg:#3a3214; --warn:#f08b52; --warn-bg:#40251a; --crit:#ff7a70; --crit-bg:#45201d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1518; --panel:#142126; --ink:#e7eff1; --ink2:#a9babf; --ink3:#7d9096; --line:#25373d; --grid:#1d2e33;
+  --water:#4fa3d6; --water2:#2f6f96; --water-soft:#183746; --rain:#8796ef; --rain-soft:#232a52; --soil:#4a4234; --soil2:#5d533f; --road:#5b6468; --house:#3a3a36; --roof:#c4683a; --sky:#13202a; --metal:#8a9ba1; --fc1:#9085e9; --fc2:#e87ba4; --fc3:#3cc493; --fc4:#d9b23a;
+  --ok:#57c48b; --ok-bg:#163a28; --watch:#e3bf45; --watch-bg:#3a3214; --warn:#f08b52; --warn-bg:#40251a; --crit:#ff7a70; --crit-bg:#45201d; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2{font-family:var(--display);margin:0;letter-spacing:.01em;text-wrap:balance}
+h1{font-size:1.45rem;font-weight:700}
+h2{font-size:.95rem;font-weight:600;color:var(--ink2)}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums}
+.tiny{font-size:.76rem;color:var(--ink3)}
+.top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.top .r{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pill{font-family:var(--display);font-weight:700;font-size:1.1rem;padding:4px 16px;border-radius:999px;color:var(--panel);white-space:nowrap;background:var(--ink3)}
+.pill[data-lv="ok"]{background:var(--ok)} .pill[data-lv="watch"]{background:var(--watch)} .pill[data-lv="warn"]{background:var(--warn)} .pill[data-lv="crit"]{background:var(--crit)}
+.fresh{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;color:var(--ink2)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ok)}
+.dot.stale{background:var(--warn)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.hero{display:grid;grid-template-columns:minmax(0,2.3fr) minmax(0,1fr);gap:14px}
+.side{display:grid;grid-template-rows:auto auto;gap:14px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.act{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;font-weight:500;padding:5px 11px;border-radius:999px;background:var(--warn-bg);color:var(--ink)}
+.act.crit{background:var(--crit-bg)} .act.watch{background:var(--watch-bg)} .act.ok{background:var(--ok-bg)}
+.act svg{flex:none}
+svg text{font-family:var(--body);font-size:12px;fill:var(--ink2)}
+svg .big{font-family:var(--display);font-weight:700;fill:var(--ink)}
+svg .lbl{font-size:12px;fill:var(--ink2)}
+svg .lblb{font-size:13px;font-weight:600;fill:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpi{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.kpi .ic{grid-row:1/3;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:var(--water-soft);color:var(--water)}
+.kpi .ic.r{background:var(--rain-soft);color:var(--rain)}
+.kpi .v{font-family:var(--display);font-weight:700;font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:.8rem;font-weight:500;color:var(--ink2);margin-left:3px}
+.kpi .lb{font-size:.78rem;color:var(--ink2)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;align-items:start}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.chartbox{position:relative}
+.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 9px;font-size:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.14);white-space:nowrap;z-index:2}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.76rem;color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:14px;height:4px;border-radius:2px;display:inline-block}
+.pumps{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.pump{font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px 8px;border:1.5px solid var(--line);border-radius:10px;text-align:center;background:var(--panel);min-width:0}
+.pump:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+.pump[data-s="run"]{border-color:var(--water);background:var(--water-soft)}
+.pump[data-s="down"]{border-color:var(--crit);background:var(--crit-bg)}
+.pump:disabled{cursor:default}
+.pump .nm{font-weight:600;font-size:.82rem;line-height:1.2}
+.pump .rt{font-family:var(--display);font-size:.8rem;color:var(--ink2);font-variant-numeric:tabular-nums}
+.pump .st{font-size:.72rem;font-weight:600;padding:0 8px;border-radius:999px;background:var(--grid);color:var(--ink2)}
+.pump[data-s="run"] .st{background:var(--water);color:var(--panel)}
+.pump[data-s="down"] .st{background:var(--crit);color:var(--panel)}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 1.1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.drop{animation:fall .9s linear infinite}
+@keyframes fall{from{transform:translateY(-14px);opacity:0}20%{opacity:1}to{transform:translateY(26px);opacity:0}}
+.flow{stroke-dasharray:6 6;animation:flow .8s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-12}}
+.heat{display:grid;gap:4px}
+.heat .c{border-radius:6px;padding:7px 2px;text-align:center;font-family:var(--display);font-weight:600;font-size:.85rem;font-variant-numeric:tabular-nums}
+.heat .h{font-size:.72rem;color:var(--ink3);text-align:center;align-self:end}
+.heat .rh{font-size:.76rem;color:var(--ink2);align-self:center;padding-right:4px}
+.c.ok{background:var(--ok-bg);color:var(--ok)} .c.watch{background:var(--watch-bg);color:var(--watch)} .c.warn{background:var(--warn-bg);color:var(--warn)} .c.crit{background:var(--crit-bg);color:var(--crit)}
+.modebox{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.modeL{font-family:var(--display);font-weight:700;font-size:2.4rem;line-height:1;width:64px;height:64px;border-radius:12px;display:grid;place-items:center;background:var(--water-soft);color:var(--water)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;font-size:.85rem;font-weight:600;border:0;padding:6px 14px;background:var(--panel);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.seg button:disabled{opacity:.5;cursor:not-allowed}
+details.drawer{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+details.drawer>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;font-family:var(--display);font-weight:600}
+details.drawer>summary::-webkit-details-marker{display:none}
+details.drawer>summary .plus{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--water);color:var(--panel);font-size:1rem;line-height:1}
+details.drawer[open]>summary .plus{background:var(--ink2)}
+details.drawer>.in{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.drawers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+form.entry{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--ink2);min-width:0}
+input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;min-width:0}
+input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+.btn{font:inherit;font-weight:600;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px}
+.btn.primary{background:var(--water);border-color:var(--water);color:var(--panel)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+a{color:var(--water)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.82rem}
+th,td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-weight:600;color:var(--ink2);font-size:.74rem}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-size:.7rem;padding:0 7px;border-radius:999px;font-weight:600;background:var(--grid);color:var(--ink2)}
+.params{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.del{font:inherit;font-size:.72rem;padding:1px 8px;border-radius:5px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--panel);padding:8px 16px;border-radius:8px;font-size:.9rem;z-index:5}
+@media (max-width:1000px){.hero,.grid2{grid-template-columns:minmax(0,1fr)}.side{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.drawers{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:560px){.side{grid-template-columns:minmax(0,1fr)}.kpi .v{font-size:1.3rem}.kpi .ic{width:36px;height:36px}h1{font-size:1.2rem}}
+#scheme{overflow-x:auto}
+.tl{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;padding:10px 14px;gap:4px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.tlrow{display:flex;gap:10px;align-items:center}
+.tltrack{position:relative;flex:1 1 auto;height:48px;min-width:0}
+#tlStrip,#tlStrip svg{position:absolute;inset:0;width:100%;height:100%}
+#tlRange{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;background:transparent;-webkit-appearance:none;appearance:none;border:0;cursor:pointer}
+#tlRange::-webkit-slider-runnable-track{background:transparent;height:48px}
+#tlRange::-moz-range-track{background:transparent;height:48px}
+#tlRange::-webkit-slider-thumb{-webkit-appearance:none;width:6px;height:48px;border-radius:3px;background:var(--ink);box-shadow:0 0 0 2px var(--panel)}
+#tlRange::-moz-range-thumb{width:6px;height:48px;border-radius:3px;background:var(--ink);border:2px solid var(--panel)}
+.tlbtn{font:inherit;font-weight:700;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);height:40px;min-width:44px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.live.on{background:var(--crit);border-color:var(--crit);color:var(--panel)}
+.live .ld{width:9px;height:9px;border-radius:50%;background:currentColor}
+.live.on .ld{animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+#tlEmpty{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.78rem;color:var(--ink3);pointer-events:none;text-align:center}
+.rng button{padding:4px 11px;font-size:.8rem}
+.tlfoot{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.tllab{display:flex;justify-content:space-between;gap:8px;font-size:.76rem;color:var(--ink3);font-variant-numeric:tabular-nums}
+.tllab b{color:var(--ink);font-family:var(--display);font-size:.9rem}
+.hist .card:not(.tl){outline:2px dashed var(--watch);outline-offset:-2px}
+.cap{font-size:.8rem;color:var(--ink2);margin:0;line-height:1.45}
+details.info{font-size:.8rem;color:var(--ink2)}
+details.info>summary{cursor:pointer;color:var(--water);font-weight:600;list-style:none;display:inline-flex;gap:5px;align-items:center}
+details.info>summary::-webkit-details-marker{display:none}
+details.info>summary::before{content:"i";display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;font-size:.7rem;font-style:italic;font-family:Georgia,serif}
+details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:column;gap:3px}
+@media (prefers-reduced-motion:reduce){.live.on .ld{animation:none}}
+@media (max-width:640px){#scheme svg{min-width:640px}}
+@media (prefers-reduced-motion:reduce){.spin,.drop,.flow{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="tiny">หมู่บ้าน <span id="areaTxt">45</span> ไร่ · คลองรางขมิ้น · สถานีฝน RF.TKU.01 ทุ่งครุ</div>
+      <h1>สถานการณ์น้ำหมู่บ้าน</h1>
+    </div>
+    <div class="r">
+      <span class="fresh"><i class="dot" id="freshDot"></i><span id="lastTxt">–</span></span>
+      <span class="pill" id="pill">–</span>
+    </div>
+  </div>
+
+  <section class="card tl" aria-label="แถบย้อนเวลา">
+    <div class="tlrow">
+      <button type="button" class="tlbtn" id="tlPlay" aria-label="เล่นย้อนหลังแบบ timelapse">▶ เล่น</button>
+      <div class="tltrack"><div id="tlStrip"></div><div id="tlEmpty" hidden>ยังไม่มีข้อมูลช่วงนี้</div><input id="tlRange" type="range" min="0" max="1" step="60000" value="1" aria-label="เลือกเวลาที่ต้องการดู"></div>
+      <button type="button" class="tlbtn live on" id="tlLive" aria-pressed="true"><i class="ld"></i>LIVE</button>
+    </div>
+    <div class="tllab"><span id="tlStart">–</span><span id="tlCur"><b>ตอนนี้</b></span><span id="tlEnd">ตอนนี้</span></div>
+    <div class="tlfoot">
+    <details class="info"><summary>วิธีใช้แถบเวลา</summary><ul>
+      <li>แถบสีฟ้าคือปริมาณน้ำค้างในระบบตลอดช่วงที่มีข้อมูล แท่งสีม่วงคือฝน เส้นแดงคือจุดที่น้ำเริ่มขึ้นถนน</li>
+      <li>ลากแถบเพื่อย้อนไปดูเวลาใดก็ได้ ภาพผัง เกจ กราฟ และตัวเลขทั้งหน้าจะแสดงสภาพ ณ เวลานั้น กรอบเส้นประสีเหลืองบอกว่ากำลังดูย้อนหลัง</li>
+      <li>▶ เล่น = ไล่เวลาตั้งแต่ต้นจนถึงปัจจุบันแบบ timelapse · LIVE (สีแดง) = ดูสถานการณ์ปัจจุบันและอัปเดตเอง กดอีกครั้งเพื่อหยุดไว้ที่เวลานั้น</li>
+      <li>สถานะปั๊มและประตูไม่ได้เก็บย้อนหลัง จึงแสดงสถานะปัจจุบันเสมอ ส่วนอัตราสูบในอดีตใช้ค่าที่บันทึกไว้ตอนกรอกข้อมูลแต่ละครั้ง</li>
+      <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ข้อมูลที่บันทึกเก็บไว้ถาวร ช่วง 30 วันแสดงได้สูงสุด 1,000 ครั้งล่าสุด</li>
+    </ul></details>
+    <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button></span>
+    </div>
+  </section>
+
+  <div class="acts" id="actions" aria-live="polite"></div>
+
+  <div class="hero">
+    <div class="col">
+      <section class="card" style="padding:10px 10px 6px">
+        <div id="scheme"></div>
+        <p class="cap">ภาพจำลองเส้นทางน้ำ: ฝนตกลงหมู่บ้าน → ไหลลงท่อระบาย → บ่อซัมพ์ → ปั๊มสูบหรือไหลผ่านประตูลงคลองรางขมิ้น</p>
+        <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li><b>เม็ดฝน</b>: ยิ่งฝนแรงยิ่งมีเม็ดฝนมาก มาจากค่าฝนสะสมของสถานี RF.TKU.01 ที่บันทึก (ส่วนต่างระหว่าง 2 ครั้ง หารด้วยเวลา)</li>
+          <li><b>น้ำในท่อ</b>: ความเต็มของท่อ = น้ำค้างในระบบ ÷ ความจุเก็บกัก (ตั้งไว้ 2,000 ลบ.ม.) เป็นค่าคำนวณ ไม่ใช่ค่าวัด</li>
+          <li><b>บ่อซัมพ์และคลอง</b>: ระดับน้ำมาจากไม้วัดที่กรอก (ซม.) เส้นประส้ม = ระดับเริ่มสูบ เส้นประแดง = ระดับเตือน/วิกฤต ถ้ายังไม่กรอก บ่อจะแสดงตามค่าคำนวณ และคลองขึ้นว่า "ยังไม่มีค่า"</li>
+          <li><b>ปั๊ม 6"</b>: หมุนเมื่อตั้งเป็น "เดิน" สีแดงคือเสีย · <b>ประตู</b> สีเขียว = เปิด สีแดง = ปิด</li>
+          <li><b>น้ำบนถนน</b>: แสดงเมื่อกรอกความลึกน้ำบนถนน หรือเมื่อน้ำค้างเกินความจุเก็บกัก</li>
+        </ul></details>
+      </section>
+      <section class="kpis" id="kpis"></section>
+      <details class="info"><summary>ตัวเลข 4 ช่องนี้มาจากไหน</summary><ul>
+        <li><b>ฝนสะสมวันนี้</b>: ค่า "ฝนสะสม 0.00 น.–ปัจจุบัน" ของสถานี สนข.ทุ่งครุ ครั้งล่าสุดที่บันทึก</li>
+        <li><b>ความแรงฝนล่าสุด</b>: ฝนที่เพิ่มขึ้นระหว่าง 2 ครั้งที่บันทึก ÷ ช่วงเวลา (มม./ชม.) ถ้าไม่มีค่าใหม่เกิน 75 นาทีจะถือว่าฝนหยุด</li>
+        <li><b>ระบายออกได้</b>: รวมอัตราสูบของปั๊มที่ตั้งเป็น "เดิน" (ค่าใช้งานจริงโดยประมาณจากตารางปั๊ม) บวกน้ำที่ไหลออกเองเมื่อเปิดประตูและบ่อสูงกว่าคลอง</li>
+        <li><b>ฝนที่รับไหวต่อเนื่อง</b>: ถ้าฝนตกแรงกว่านี้ น้ำจะเริ่มสะสม = อัตราระบาย ÷ (พื้นที่ 72,000 ตร.ม. × 0.8)</li>
+      </ul></details>
+    </div>
+    <div class="side">
+      <section class="card" style="align-items:center;gap:0">
+        <h2 style="align-self:flex-start">ความจุเก็บกักที่ใช้ไป</h2>
+        <div id="gauge" style="width:100%;max-width:300px"></div>
+        <details class="info" style="align-self:stretch"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li>% = น้ำที่ค้างอยู่ในท่อ บ่อพัก และบ่อซัมพ์ ÷ ความจุที่รับได้ก่อนน้ำเอ่อขึ้นถนน (2,000 ลบ.ม. เป็นค่าสมมติจากไฟล์แผนปั๊ม)</li>
+          <li>น้ำค้าง = น้ำฝนที่ไหลนอง (ฝน × 45 ไร่ × 0.8) − น้ำที่ปั๊มสูบออก สะสมตามเวลา</li>
+          <li>เขียว &lt;30% ปกติ · เหลือง 30–80% เฝ้าระวัง · ส้ม 80–100% เตือน · แดง ≥100% น้ำขึ้นถนนแล้ว</li>
+        </ul></details>
+      </section>
+      <section class="card" style="align-items:center;gap:4px">
+        <h2 style="align-self:flex-start">เวลาก่อนน้ำขึ้นถนน</h2>
+        <div id="countdown" style="width:100%;max-width:320px"></div>
+        <details class="info" style="align-self:stretch"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li>คำนวณว่าถ้าฝนตกตามค่า "ฝนคาดการณ์" (ช่องในตารางสีด้านล่าง ถ้าไม่กรอกจะใช้ความแรงฝนล่าสุด) น้ำค้างจะเต็มความจุเมื่อไร</li>
+          <li>คิดจากน้ำที่ค้างอยู่ตอนนี้ และปั๊มที่ตั้งเป็น "เดิน" อยู่</li>
+          <li>"ไม่ท่วม" = ปั๊มสูบทันกับฝนที่คาด · "ขังแล้ว" = น้ำเกินความจุ และบอกเวลาที่คาดว่าน้ำจะลดพ้นถนน</li>
+        </ul></details>
+      </section>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="col">
+      <section class="card">
+        <h2>น้ำค้างในระบบ (ลบ.ม.)</h2>
+        <p class="cap">ปริมาณน้ำที่ค้างในท่อและบ่อตามเวลา ถ้าเส้นสีฟ้าขึ้นถึงเส้นแดง แปลว่าน้ำเริ่มเอ่อขึ้นถนน</p>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--water)"></i>ประเมินจากฝนจริง</span>
+          <span><i class="sw" style="background:var(--water);opacity:.45"></i><span id="manLbl">คาดการณ์ (ค่าที่กรอกเอง)</span></span>
+          <span><i class="sw" style="background:var(--crit)"></i>น้ำขึ้นถนน</span>
+        </div>
+        <div class="legend" id="fcLegend"></div>
+        <div class="chartbox" id="chartV"></div>
+        <h2>ความแรงฝน (มม./ชม.)</h2>
+        <div class="chartbox" id="chartR"></div>
+        <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li>กราฟบน: เส้นทึบคือค่าที่คำนวณจากฝนที่บันทึกจริง เส้นประคือคาดการณ์ถ้าฝนตกตามค่า "ฝนคาดการณ์" จุดแดงคือเวลาที่คาดว่าน้ำจะขึ้นถนน ชี้เมาส์หรือแตะที่กราฟเพื่อดูค่า</li>
+          <li>กราฟล่าง: แต่ละแท่งคือความแรงฝนเฉลี่ยระหว่าง 2 ครั้งที่บันทึก แท่งจางคือฝนคาดการณ์ เส้นประฟ้าคือฝนที่ปั๊มรับไหว ถ้าแท่งสูงกว่าเส้นนี้ น้ำจะสะสม</li>
+          <li><b>เส้นพยากรณ์สี</b> (ม่วง ชมพู เขียว เหลืองเข้ม): แต่ละเส้นคือฝนรายชั่วโมงจากแหล่งพยากรณ์หนึ่งแหล่ง เช่น Open-Meteo หรือกรมอุตุฯ นำมาคำนวณน้ำค้างแบบเดียวกัน ชื่อแหล่งและเวลาที่ดึงข้อมูลอยู่ใต้หัวกราฟ ถ้าข้อมูลเก่ากว่า 6 ชม. เส้นจะจาง ในกราฟล่าง เส้นขั้นบันไดสีเดียวกันคือฝนพยากรณ์ของแหล่งนั้น</li>
+          <li>ถ้าหลายแหล่งให้ผลต่างกันมาก แปลว่าพยากรณ์ยังไม่แน่นอน ให้วางแผนตามเส้นที่แย่ที่สุด</li>
+          <li>ค่าที่ติดป้าย "ประมาณ" ในประวัติ (ก่อน 21:10 วันที่ 14 ต.ค.) อ่านจากกราฟในภาพหน้าจอสถานี ไม่ใช่ตัวเลขจริงจากสถานี</li>
+        </ul></details>
+      </section>
+      <section class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2>ถ้าฝนตกต่อ เหลือเวลาก่อนน้ำขึ้นถนน</h2>
+          <span class="legend"><span><i class="sw" style="background:var(--ok);height:8px"></i>รับไหว</span><span><i class="sw" style="background:var(--warn);height:8px"></i>&lt; 2 ชม.</span><span><i class="sw" style="background:var(--crit);height:8px"></i>&lt; 1 ชม.</span></span>
+        </div>
+        <p class="cap">แถว = ฝนตกนานกี่ชั่วโมง · คอลัมน์ = ฝนแรงกี่ มม./ชม. · ช่อง = เวลาที่เหลือก่อนน้ำขึ้นถนน (ชม.:นาที หรือ น. = นาที)</p>
+        <div class="heat" id="heat"></div>
+        <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li>คำนวณจากน้ำที่ค้างอยู่ตอนนี้ บวกฝนตามช่อง ลบด้วยปั๊มที่เดินอยู่ ✓ = น้ำไม่เกินความจุจนฝนหยุด</li>
+          <li>เทียบความแรงฝน: 10 มม./ชม. ฝนปานกลาง · 35 มม./ชม. ฝนหนัก · 50–80 มม./ชม. พายุฝนฟ้าคะนองช่วงสั้น (วันนี้ช่วงหนักราว 30 มม./ชม.)</li>
+          <li>ช่อง "ฝนคาดการณ์" และ "นาน" ด้านล่างใช้กับนาฬิกาและเส้นประในกราฟ ใส่ตามพยากรณ์กรมอุตุฯ ได้</li>
+        </ul></details>
+        <div class="row">
+          <label class="f" style="flex:1 1 120px">ฝนคาดการณ์ (มม./ชม.)<input id="scI" type="number" min="0" step="1" inputmode="decimal"></label>
+          <label class="f" style="flex:1 1 120px">นาน (ชม.)<input id="scH" type="number" min="0" step="0.5" inputmode="decimal"></label>
+        </div>
+      </section>
+    </div>
+    <div class="col">
+      <section class="card">
+        <div class="row" style="justify-content:space-between"><h2>ปั๊ม · แตะเพื่อเปลี่ยนสถานะ</h2><span class="num" id="pumpSum" style="font-size:.85rem"></span></div>
+        <div id="flowbar"></div>
+        <div class="pumps" id="pumps"></div>
+        <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li>แถบ <b>ฝนเข้า</b> = ความแรงฝนล่าสุด × พื้นที่ × 0.8 (ลบ.ม./ชม.) · แถบ <b>สูบ/ไหลออก</b> = ปั๊มที่เดินรวมกัน ถ้าแถบฝนยาวกว่า น้ำจะสะสม</li>
+          <li>อัตราของแต่ละปั๊มมาจากชีต "ตารางปั๊ม" ในไฟล์แผนป้องกันน้ำท่วม (สเปก × ตัวคูณใช้งานจริง) ปั๊ม 6" ไม่มีป้ายสเปก ใช้ค่ากลาง 210 ลบ.ม./ชม. (ช่วง 150–270)</li>
+          <li>แตะการ์ดเพื่อเปลี่ยน เดิน → พร้อม → เสีย ทุกคนที่เปิดหน้านี้จะเห็นสถานะเดียวกัน ตัวเลขทั้งหน้าจะคำนวณใหม่ทันที</li>
+        </ul></details>
+      </section>
+      <section class="card">
+        <div class="row" style="justify-content:space-between"><h2>ประตูน้ำ · โหมด</h2>
+          <span class="seg" id="gateSeg"><button type="button" data-g="open">เปิด</button><button type="button" data-g="closed">ปิด</button></span></div>
+        <div class="modebox" id="mode"></div>
+        <div id="levels"></div>
+        <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li><b>โหมด A–E</b> มาจากชีต "กฎเปิดปิดประตูน้ำ" ตัดสินจากระดับบ่อซัมพ์เทียบคลอง: A ไหลออกเอง · B ไหลออก+สูบช่วย · C ปิดกันน้ำย้อน+สูบ · D วิกฤต · ? = ยังไม่ได้กรอกระดับ</li>
+          <li><b>แท่งระดับน้ำ</b> 3 แท่ง มาจากไม้วัดที่กรอกล่าสุด (ซม.) เส้นส้ม = ระดับเฝ้าระวัง เส้นแดง = ระดับเตือน/วิกฤต</li>
+          <li>ระดับเตือนตอนนี้เป็นค่าสมมติ (บ่อ 80/120 ซม. คลอง 150 ซม. ถนน 10/20 ซม.) ต้องวัดหน้างานแล้วแก้ใน "ตัวเลขที่ใช้คำนวณ"</li>
+        </ul></details>
+      </section>
+    </div>
+  </div>
+
+  <div class="drawers">
+    <details class="drawer" hidden>
+      <summary><span class="plus">+</span>บันทึกค่าใหม่</summary>
+      <div class="in">
+        <a class="tiny" href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">เปิดหน้าสถานีฝน สนข. ↗</a>
+        <form class="entry" id="entry">
+          <label class="f">เวลา<input id="eT" type="datetime-local" required></label>
+          <label class="f">ฝนสะสมวันนี้ มม.<input id="eRain" type="number" step="0.1" min="0" inputmode="decimal"></label>
+          <label class="f">บ่อซัมพ์ ซม.<input id="eSump" type="number" step="1" inputmode="decimal"></label>
+          <label class="f">คลอง ซม.<input id="eCanal" type="number" step="1" inputmode="decimal"></label>
+          <label class="f">น้ำบนถนน ซม.<input id="eRoad" type="number" step="1" min="0" inputmode="decimal"></label>
+          <label class="f">หมายเหตุ<input id="eNote" type="text" maxlength="140"></label>
+          <div class="row" style="grid-column:1/-1"><button class="btn primary" type="submit">บันทึก</button><span class="tiny" id="eMsg"></span></div>
+        </form>
+      </div>
+    </details>
+    <details class="drawer">
+      <summary><span class="plus">≡</span>ประวัติค่าที่บันทึก</summary>
+      <div class="in"><div class="tbl"><table id="log"></table></div></div>
+    </details>
+    <details class="drawer">
+      <summary><span class="plus">⚙</span>ตัวเลขที่ใช้คำนวณ</summary>
+      <div class="in">
+        <form id="pform">
+          <div class="params" id="params"></div>
+          <div class="row" style="margin-top:10px"><button type="submit" class="btn primary">บันทึกตัวเลข</button><button type="button" class="btn" id="pReset">ค่าตั้งต้น</button></div>
+        </form>
+        <span class="tiny">ระดับไม้วัดยังเป็นค่าสมมติจนกว่าจะวัดหน้างาน · น้ำขึ้นถนน = น้ำค้างเกินความจุเก็บกัก</span>
+      </div>
+    </details>
+  </div>
+  <span class="tiny" id="storeTxt">กำลังเชื่อมต่อข้อมูลกลาง…</span>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const TZ=7*3600e3,H=3600e3,MIN=60e3;
+const DEF={
+  areaRai:45,C:0.8,storage:2000,gateW:0.8,gateH:0.8,Cd:0.6,pipeCap:600,
+  thrStop:40,thrStart:80,thrWarn:120,thrCanalCrit:150,roadL2:10,roadL3:20,
+  pumps:[
+    {id:"p7",name:'หอยโข่ง 6" 15 แรง (ประจำบ่อซัมพ์)',lpm:3500},
+    {id:"p4",name:'#4 DELTON 3"',lpm:413},
+    {id:"p5",name:'#5 DELTON 3"',lpm:413},
+    {id:"p2",name:'#2 TOTAL 2"',lpm:216},
+    {id:"p3",name:'#3 TOTAL 2"',lpm:216},
+    {id:"p6",name:'#6 ZUZUMI 2"',lpm:150},
+    {id:"p1",name:'#1 (ยังไม่มีสเปก)',lpm:0}
+  ]
+};
+const SHORT={p7:'หอยโข่ง 6"',p4:'#4 DELTON',p5:'#5 DELTON',p2:'#2 TOTAL',p3:'#3 TOTAL',p6:'#6 ZUZUMI',p1:'#1'};
+const DEF_STATE={pumps:{p7:"run"},gate:"open",scI:null,scH:2};
+const PLAB=[["areaRai","พื้นที่รับน้ำ (ไร่)"],["C","สัดส่วนน้ำไหลนอง"],["storage","ความจุเก็บกัก (ลบ.ม.)"],["pipeCap","ท่อไหลออกเองสูงสุด (ลบ.ม./ชม.)"],
+  ["gateW","ช่องประตูกว้าง (ม.)"],["gateH","ช่องประตูสูง (ม.)"],["thrStop","บ่อ: หยุดสูบ (ซม.)"],["thrStart","บ่อ: เริ่มสูบ (ซม.)"],
+  ["thrWarn","บ่อ: เตือน (ซม.)"],["thrCanalCrit","คลอง: วิกฤต (ซม.)"],["roadL2","ถนน ระดับ 2 (ซม.)"],["roadL3","ถนน ระดับ 3 (ซม.)"]];
+let P=clone(DEF),S=clone(DEF_STATE),R=[],db=null,canWrite=true,mode="init";
+let viewT=null,NOWV=null,playTimer=null,dragging=false,unsubR=null,FC=[],FCP=[];
+const FCC=["var(--fc1)","var(--fc2)","var(--fc3)","var(--fc4)"];
+function cleanFC(d){const h=Array.isArray(d.hourly)?d.hourly.filter(e=>e&&num(e.t)!=null&&num(e.mm)!=null).map(e=>({t:+e.t,mm:Math.max(0,+e.mm)})).sort((a,b)=>a.t-b.t):[];return{id:String(d.id),label:String(d.label||d.id).slice(0,60),source:typeof d.source==="string"&&/^https:\/\//.test(d.source)?d.source:null,issuedAt:num(d.issuedAt),hourly:h}}
+function projectHourly(V0,hourly,out,horizon=12){
+  const T0=NOW(),pts=[{t:T0,V:V0}];let V=V0,tFill=null,maxV=V0,tot=0;const dt=1/12;
+  for(let s=1;s<=horizon*12;s++){const t=T0+s*dt*H;const e=hourly.find(e=>t>e.t&&t<=e.t+H);const i=e?e.mm:0;tot+=i*dt;
+    V=Math.max(0,V+(mmToM3(i)-out)*dt);maxV=Math.max(maxV,V);if(tFill==null&&V>=P.storage&&V0<P.storage)tFill=s*dt;if(s%2===0)pts.push({t,V})}
+  return{pts,tFill,maxV,tot};
+}
+let RANGE_H=36;try{const v=+localStorage.getItem("wr_range");if([36,72,168,720].includes(v))RANGE_H=v}catch(e){}
+const NOW=()=>NOWV??Date.now();
+const $=id=>document.getElementById(id);
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function num(v){return(v===null||v===undefined||v===""||isNaN(+v))?null:+v}
+function fmt(n,d=0){return n==null?"–":Number(n).toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d})}
+function bkk(ms){return new Date(ms+TZ)}
+function hm(ms){const d=bkk(ms);return String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0")}
+const TH_M=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+function dhm(ms){const d=bkk(ms);return d.getUTCDate()+" "+TH_M[d.getUTCMonth()]+" "+hm(ms)}
+function dayKey(ms){return bkk(ms).toISOString().slice(0,10)}
+function toInput(ms){return bkk(ms).toISOString().slice(0,16)}
+function fromInput(v){const m=/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(v);if(!m)return null;return Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5])-TZ}
+function durS(h){if(h==null)return "–";if(h<1)return Math.max(1,Math.round(h*60))+" น.";const hh=Math.floor(h),mm=Math.round((h-hh)*60);return hh+":"+String(mm).padStart(2,"0")}
+function dur(h){if(h==null)return "–";if(h<1)return Math.max(1,Math.round(h*60))+" นาที";const hh=Math.floor(h),mm=Math.round((h-hh)*60);return hh+" ชม."+(mm?" "+mm+" นาที":"")}
+function ago(ms){const m=Math.round((Date.now()-ms)/MIN);if(m<1)return "เมื่อสักครู่";if(m<60)return m+" นาทีก่อน";const h=Math.floor(m/60);return h<48?h+" ชม. "+(m%60)+" นาทีก่อน":Math.round(h/24)+" วันก่อน"}
+function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,2600)}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+let reduce=false;try{reduce=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
+
+/* ---------- physics ---------- */
+const areaM2=()=>P.areaRai*1600;
+const mmToM3=mm=>areaM2()*P.C*mm/1000;
+function pumpQ(st){let q=0;for(const p of P.pumps){if((st.pumps||{})[p.id]==="run")q+=(+p.lpm||0)*60/1000}return q}
+function gravityQ(gate,sump,canal){if(gate!=="open"||sump==null||canal==null||sump<=canal)return 0;const dh=(sump-canal)/100,a=P.gateW*P.gateH;return Math.min(P.Cd*a*Math.sqrt(2*9.81*dh)*3600,P.pipeCap)}
+function latest(f){for(const r of R){if(num(r[f])!=null)return r}return null}
+function freshVal(f,maxH){const r=latest(f);return r&&NOW()-r.t<maxH*H?+r[f]:null}
+function currentOut(){const g=gravityQ(S.gate,freshVal("sump",6),freshVal("canal",6));const p=pumpQ(S);return{pump:p,grav:g,total:p+g}}
+function rainIntervals(){
+  const rs=R.filter(r=>num(r.rain)!=null).slice().sort((a,b)=>a.t-b.t);
+  const use=rs.filter(r=>r.t>=Date.now()-RANGE_H*H),out=[];
+  for(let i=0;i<use.length;i++){const r=use[i],prev=use[i-1];
+    if(!prev||r.t-prev.t>6*H){let mm=+r.rain;if(prev&&dayKey(prev.t)===dayKey(r.t))mm=Math.max(0,+r.rain-(+prev.rain));if(mm>0||!prev)out.push({t0:r.t-H,t1:r.t,mm,q:num(r.qOut)??currentOut().total,first:true});continue}
+    let mm=dayKey(prev.t)===dayKey(r.t)?+r.rain-(+prev.rain):+r.rain;if(mm<0)mm=+r.rain;
+    out.push({t0:prev.t,t1:r.t,mm,q:num(prev.qOut)??currentOut().total})}
+  return out;
+}
+function simulate(){
+  const iv=rainIntervals(),now=Date.now(),out=currentOut().total,pts=[];let V=0,peak=0,t;
+  if(!iv.length)return{pts,V:0,peak:0,iv,start:now-6*H};
+  t=iv[0].t0;pts.push({t,V:0});
+  let lastQ=iv[0].q;
+  for(const k of iv){
+    if(k.t0>t){const g=(k.t0-t)/H,gs=Math.max(1,Math.round(g*4)),gd=g/gs;for(let s=0;s<gs;s++){V=Math.max(0,V-lastQ*gd);t+=gd*H;pts.push({t,V})}t=k.t0}
+    lastQ=k.q;
+    const span=(k.t1-k.t0)/H;if(span<=0)continue;const inflow=mmToM3(k.mm)/span;
+    const steps=Math.max(1,Math.round(span*12)),dt=span/steps;
+    for(let s=0;s<steps;s++){V=Math.max(0,V+(inflow-k.q)*dt);t+=dt*H;peak=Math.max(peak,V);if(s%3===2||s===steps-1)pts.push({t,V})}
+    t=k.t1}
+  if(now>t){const span=(now-t)/H,steps=Math.max(1,Math.round(span*12)),dt=span/steps;
+    for(let s=0;s<steps;s++){V=Math.max(0,V-out*dt);t+=dt*H;if(s%3===2||s===steps-1)pts.push({t,V})}}
+  return{pts,V,peak,iv,start:iv[0].t0};
+}
+function project(V0,i,hours,out,horizon=10){
+  const pts=[{t:NOW(),V:V0}];let V=V0,tFill=null,tDrain=null,maxV=V0;const dt=1/12;
+  for(let s=1;s<=horizon*12;s++){const h=s*dt,on=h<=hours;V=Math.max(0,V+((on?mmToM3(i):0)-out)*dt);maxV=Math.max(maxV,V);
+    if(tFill==null&&V>=P.storage&&V0<P.storage)tFill=h;if(tDrain==null&&!on&&V<=0.5)tDrain=h;pts.push({t:NOW()+h*H,V})}
+  return{pts,tFill,tDrain,maxV,end:V};
+}
+function curIntensity(){const iv=rainIntervals(),k=iv[iv.length-1];if(!k)return null;if(Date.now()-k.t1>75*MIN)return{v:0,stale:true};return{v:k.mm/((k.t1-k.t0)/H),stale:false,at:k.t1}}
+function todayRain(){const r=R.find(x=>num(x.rain)!=null);if(!r)return null;return{v:+r.rain,t:r.t,today:dayKey(r.t)===dayKey(NOW())}}
+function sumpTrend(){const ss=R.filter(r=>num(r.sump)!=null).slice(0,2);if(ss.length<2||NOW()-ss[0].t>3*H)return null;const dh=(ss[0].t-ss[1].t)/H;if(dh<=0)return null;return{rate:(ss[0].sump-ss[1].sump)/dh,level:+ss[0].sump}}
+function decideMode(){
+  const sv=freshVal("sump",6),cv=freshVal("canal",6),tr=sumpTrend(),allRun=P.pumps.filter(p=>p.lpm>0).every(p=>S.pumps[p.id]==="run");
+  if(sv==null||cv==null)return{m:"?",t:"ยังไม่มีระดับน้ำ",d:"กรอกระดับบ่อและคลองจากไม้วัด",sv,cv};
+  if(cv>=P.thrCanalCrit||(tr&&tr.rate>0&&allRun&&sv>=P.thrWarn))return{m:"D",t:"วิกฤต",d:"ปิดประตู เดินปั๊มทุกตัว ขอปั๊มเสริม ปภ. 1784",sv,cv,gate:"closed"};
+  if(cv>=sv-10)return{m:"C",t:"ปิดกันย้อน + สูบ",d:"ปิดประตู เดินปั๊ม 6\"",sv,cv,gate:"closed"};
+  if(sv>=P.thrStart||(tr&&tr.rate>0))return{m:"B",t:"ไหลออก + สูบช่วย",d:"เปิดประตู เดินปั๊ม 6\"",sv,cv,gate:"open"};
+  if(cv<=sv-20)return{m:"A",t:"ไหลออกเอง",d:"เปิดประตู ปั๊มพร้อม",sv,cv,gate:"open"};
+  return{m:"B",t:"ไหลออก + สูบช่วย",d:"เปิดประตู เดินปั๊ม 6\" ช่วย",sv,cv,gate:"open"};
+}
+
+/* ---------- icons ---------- */
+const IC={
+  cloud:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 15a4 4 0 0 1 .5-8A5.5 5.5 0 0 1 18 8.5a3.5 3.5 0 0 1-.5 6.5Z"/><path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3"/></svg>',
+  speed:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/></svg>',
+  pump:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="13" r="6"/><path d="M11 7V3h6M17 13h4"/><path d="M11 13l3-2M11 13l-1 3.5"/></svg>',
+  drop:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11Z"/></svg>',
+  alert:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3l10 18H2Z"/><path d="M12 10v5M12 18v.5"/></svg>'
+};
+function pumpIcon(s){
+  const c=s==="run"?"var(--water)":s==="down"?"var(--crit)":"var(--metal)";
+  return `<svg width="46" height="40" viewBox="0 0 46 40" aria-hidden="true"><rect x="28" y="6" width="14" height="7" rx="2" fill="${c}" opacity=".55"/><circle cx="20" cy="22" r="15" fill="var(--panel)" stroke="${c}" stroke-width="3"/>
+  <g class="${s==="run"&&!reduce?"spin":""}"><path d="M20 22 L20 10 M20 22 L30.4 28 M20 22 L9.6 28" stroke="${c}" stroke-width="3.2" stroke-linecap="round"/><circle cx="20" cy="22" r="3" fill="${c}"/></g>
+  ${s==="down"?'<path d="M8 10 L32 34" stroke="var(--crit)" stroke-width="3" stroke-linecap="round"/>':""}</svg>`;
+}
+
+/* ---------- render ---------- */
+const LV={ok:"ปกติ",watch:"เฝ้าระวัง",warn:"เตือน",crit:"วิกฤต"};
+const LVC={ok:"var(--ok)",watch:"var(--watch)",warn:"var(--warn)",crit:"var(--crit)"};
+function vAt(pts,T){if(!pts.length)return 0;if(T<=pts[0].t)return 0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];if(T<=b.t){const f=(T-a.t)/Math.max(1,b.t-a.t);return a.V+(b.V-a.V)*f}}return pts[pts.length-1].V}
+function render(){
+  const live=viewT==null,simAll=simulate(),T=live?Date.now():Math.min(viewT,Date.now());
+  const RALL=R;
+  if(!live){R=RALL.filter(r=>r.t<=T);NOWV=T}
+  try{renderAt(simAll,T,live)}finally{R=RALL;NOWV=null}
+  document.body.classList.toggle("hist",!live);
+  drawTimeline(simAll,T,live);
+  drawLog();
+}
+function renderAt(simAll,T,live){
+  $("areaTxt").textContent=fmt(P.areaRai);
+  const sim=live?simAll:{pts:simAll.pts,iv:simAll.iv,start:simAll.start,V:vAt(simAll.pts,T),peak:Math.max(0,...simAll.pts.filter(p=>p.t<=T).map(p=>p.V))};
+  const out=currentOut(),cap=out.total/(areaM2()*P.C)*1000;
+  let ci;
+  if(live)ci=curIntensity();else{const k=simAll.iv.find(k=>T>k.t0&&T<=k.t1);ci=k?{v:k.mm/((k.t1-k.t0)/H),stale:false,at:k.t1}:(simAll.iv.length?{v:0,stale:true}:null)}
+  const tr=todayRain(),md=decideMode(),st=sumpTrend();
+  const scI=S.scI==null?(ci&&!ci.stale?Math.round(ci.v):0):+S.scI, scH=S.scH==null?2:+S.scH;
+  if(document.activeElement!==$("scI"))$("scI").value=S.scI==null?"":S.scI;
+  $("scI").placeholder=String(scI);
+  if(document.activeElement!==$("scH"))$("scH").value=scH;
+  const pr=project(sim.V,scI,scH,out.total), pct=sim.V/P.storage*100;
+  FCP=live?FC.filter(f=>f.hourly.length).map((f,i)=>Object.assign({f,col:FCC[i%FCC.length],stale:!f.issuedAt||Date.now()-f.issuedAt>6*H},projectHourly(sim.V,f.hourly,out.total))):[];
+  const fcFresh=FCP.filter(x=>!x.stale);
+  let cdPr=pr,cdLbl=null;
+  if(S.scI==null&&fcFresh.length){const worst=fcFresh.slice().sort((a,b)=>(a.tFill??1e9)-(b.tFill??1e9)||b.maxV-a.maxV)[0];cdPr=Object.assign({},pr,{tFill:worst.tFill});cdLbl=worst.f.label}
+  $("manLbl").textContent=S.scI!=null?"สมมติเอง: ฝน "+S.scI+" มม./ชม. "+scH+" ชม.":"ถ้าฝนตามค่าล่าสุด ("+scI+" มม./ชม.)";
+  $("fcLegend").innerHTML=!live?"":FCP.length?FCP.map(x=>`<span style="${x.stale?"opacity:.5":""}"><i class="sw" style="background:${x.col};height:4px"></i>${esc(x.f.label)} · อัปเดต ${x.f.issuedAt?hm(x.f.issuedAt):"–"} · ฝนรวม 12 ชม. ${fmt(x.tot,1)} มม.${x.f.source?` <a href="${esc(x.f.source)}" target="_blank" rel="noopener">ที่มา ↗</a>`:""}</span>`).join(""):`<span class="tiny">ยังไม่มีข้อมูลพยากรณ์จากแหล่งภายนอก (กำลังเชื่อมต่อ Open-Meteo / กรมอุตุฯ)</span>`;
+  const road=freshVal("road",3), last=R[0], overNow=sim.V>=P.storage;
+  $("lastTxt").textContent=!live?"กำลังย้อนดู "+dhm(T):last?"ข้อมูล "+hm(last.t)+" · "+ago(last.t):"ยังไม่มีข้อมูล";
+  $("freshDot").className="dot"+(live&&last&&Date.now()-last.t<45*MIN?"":" stale");
+
+  let lv="ok";
+  const crit=overNow||md.m==="D"||(road!=null&&road>=P.roadL3)||(pr.tFill!=null&&pr.tFill<1);
+  const warn=(road!=null&&road>=P.roadL2)||pct>=80||(pr.tFill!=null&&pr.tFill<3)||(md.sv!=null&&md.sv>=P.thrWarn);
+  const watch=(ci&&!ci.stale&&ci.v>0.5)||pct>=30||(md.sv!=null&&md.sv>=P.thrStart)||scI>cap;
+  if(R.length)lv=crit?"crit":warn?"warn":watch?"watch":"ok";
+  $("pill").dataset.lv=lv;$("pill").textContent=LV[lv];
+
+  const acts=[];
+  if(!R.length)acts.push(["ok","กด “บันทึกค่าใหม่” ด้านล่างเพื่อเริ่ม"]);
+  if(S.pumps.p7!=="run"&&lv!=="ok")acts.push(["crit","เดินปั๊ม 6\""]);
+  if(md.gate&&md.gate!==S.gate)acts.push(["warn",(md.gate==="open"?"เปิด":"ปิด")+"ประตูน้ำ (โหมด "+md.m+")"]);
+  if(lv==="watch"){acts.push(["watch","พร่องน้ำบ่อซัมพ์"]);acts.push(["watch","อ่านไม้วัดทุก 30 นาที"])}
+  if(lv==="warn"||lv==="crit"){acts.push([lv,"วาง DELTON #4 #5 จุดต่ำ"]);acts.push([lv,"เตรียมเครื่องปั่นไฟ"])}
+  if(lv==="crit"){acts.push(["crit","วาง #2 #3 #6 + กระสอบทราย"]);acts.push(["crit","ขอปั๊มเสริม ปภ. 1784"])}
+  if(!overNow&&sim.peak>P.storage)acts.push(["watch","พีคล่าสุดเกินความจุ "+fmt(sim.peak-P.storage)+" ลบ.ม. ถ้าถนนไม่ขัง ให้เพิ่มค่าความจุ"]);
+  if(live&&R.length&&Date.now()-R[0].t>45*MIN&&lv!=="ok")acts.push(["warn","ข้อมูลเก่า บันทึกค่าใหม่"]);
+  if(!live)acts.splice(0,acts.length,["watch","กำลังย้อนดูเวลา "+dhm(T)+" · กด LIVE เพื่อกลับมาดูปัจจุบัน"]);
+  $("actions").innerHTML=acts.map(([c,t])=>`<span class="act ${c}">${c==="ok"?"":IC.alert}${esc(t)}</span>`).join("");
+
+  drawScheme(sim,out,md,road,ci);
+  drawGauge(pct,lv,sim.V);
+  drawCountdown(overNow,cdPr,scI,scH,cdLbl);
+
+  const inflowNow=ci&&!ci.stale?mmToM3(ci.v):0;
+  $("kpis").innerHTML=[
+    ["r",IC.cloud,tr&&tr.today?fmt(tr.v,1):"–","มม.","ฝนสะสมวันนี้"+(tr&&tr.today?" · "+hm(tr.t):"")],
+    ["r",IC.speed,ci?fmt(ci.v,1):"–","มม./ชม.","ความแรงฝนล่าสุด"],
+    ["",IC.pump,fmt(out.total),"ลบ.ม./ชม.","ระบายออกได้"],
+    ["",IC.drop,fmt(cap,1),"มม./ชม.","ฝนที่รับไหวต่อเนื่อง"]
+  ].map(([c,ic,v,u,l])=>`<div class="kpi"><span class="ic ${c}">${ic}</span><span class="v">${v}<small>${u}</small></span><span class="lb">${l}</span></div>`).join("");
+
+  const rates=[5,10,20,35,50,80];
+  let h=`<span></span>`+rates.map(r=>`<span class="h">${r}</span>`).join("");
+  for(const hrs of [1,2,3]){h+=`<span class="rh">${hrs} ชม.</span>`+rates.map(r=>{const p=project(sim.V,r,hrs,out.total,hrs+0.1);
+    if(sim.V>=P.storage)return `<span class="c crit">ขัง</span>`;if(p.tFill==null)return `<span class="c ok">✓</span>`;
+    return `<span class="c ${p.tFill<1?"crit":p.tFill<2?"warn":"watch"}">${durS(p.tFill)}</span>`}).join("")}
+  h+=`<span></span><span class="h" style="grid-column:span ${rates.length}">ฝน มม./ชม.</span>`;
+  $("heat").style.gridTemplateColumns=`auto repeat(${rates.length},minmax(0,1fr))`;$("heat").innerHTML=h;
+
+  $("pumps").innerHTML=P.pumps.map(p=>{const s=S.pumps[p.id]||"stand",sl=s==="run"?"เดิน":s==="down"?"เสีย":"พร้อม";return `<button type="button" class="pump" data-p="${p.id}" data-s="${s}" ${canWrite?"":"disabled"} aria-label="${esc(p.name)} ${sl}">${pumpIcon(s)}<span class="nm">${esc(SHORT[p.id]||p.name)}</span><span class="rt">${p.lpm?fmt(p.lpm*0.06)+" ลบ.ม./ชม.":"ไม่มีสเปก"}</span><span class="st">${sl}</span></button>`}).join("");
+  $("pumpSum").textContent=`เดิน ${P.pumps.filter(p=>S.pumps[p.id]==="run").length}/${P.pumps.length}`;
+  drawFlowbar(inflowNow,out,scI);
+  document.querySelectorAll("#gateSeg button").forEach(b=>{b.setAttribute("aria-pressed",String(b.dataset.g===S.gate));b.disabled=!canWrite});
+
+  $("mode").innerHTML=`<span class="modeL">${md.m}</span><div><b>${esc(md.t)}</b><div class="tiny">${esc(md.d)}</div>${st&&st.rate>0&&md.sv<P.thrWarn?`<div class="tiny">บ่อขึ้น ${fmt(st.rate)} ซม./ชม. · ถึงเตือนใน ${dur((P.thrWarn-md.sv)/st.rate)}</div>`:""}</div>`;
+  drawLevels(md,road);
+  drawCharts(sim,pr,scI,scH,live);
+}
+
+function drawGauge(pct,lv,V){
+  const W=300,Hh=172,cx=150,cy=150,r=112,max=125;
+  const ang=v=>Math.PI*(1-Math.min(max,Math.max(0,v))/max);
+  const pt=(v,rr)=>[cx+rr*Math.cos(ang(v)),cy-rr*Math.sin(ang(v))];
+  const arc=(a,b,col)=>{const [x0,y0]=pt(a,r),[x1,y1]=pt(b,r);return `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="${col}" stroke-width="22"/>`};
+  let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="ใช้ความจุ ${fmt(pct)}%">`;
+  s+=arc(0,30,"var(--ok-bg)")+arc(30,80,"var(--watch-bg)")+arc(80,100,"var(--warn-bg)")+arc(100,max,"var(--crit-bg)");
+  if(pct>0.3)s+=arc(0,Math.min(max,pct),LVC[lv]);
+  for(const v of [0,50,100]){const [x,y]=pt(v,r+21);s+=`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" class="lbl">${v}%</text>`}
+  const [tx,ty]=pt(100,r);const [tx2,ty2]=pt(100,r-16);s+=`<line x1="${tx}" y1="${ty-14}" x2="${tx2}" y2="${ty2}" stroke="var(--crit)" stroke-width="2"/>`;
+  s+=`<text x="${cx}" y="${cy-8}" text-anchor="middle" class="big" style="font-size:46px;fill:${LVC[lv]}">${fmt(Math.min(pct,999))}%</text>`;
+  $("gauge").innerHTML=s+`</svg><div class="tiny" style="text-align:center">${fmt(V)} / ${fmt(P.storage)} ลบ.ม.</div>`;
+}
+function drawCountdown(overNow,pr,scI,scH,fcLbl){
+  let big,sub,col,frac;
+  if(!R.length){big="–";sub="ยังไม่มีข้อมูล";col="var(--ink3)";frac=0}
+  else if(overNow){big="ขังแล้ว";const b=firstBelow(pr.pts);sub=b!=null?"ลดพ้นถนนใน "+dur(b):"ยังไม่ลด";col="var(--crit)";frac=1}
+  else if(pr.tFill!=null){big=durS(pr.tFill);sub=(pr.tFill<1?"นาที":"ชม.:นาที")+" · "+(fcLbl?"ตามพยากรณ์ "+fcLbl:"ฝน "+scI+" มม./ชม.");col=pr.tFill<1?"var(--crit)":pr.tFill<3?"var(--warn)":"var(--watch)";frac=1-Math.min(1,pr.tFill/6)}
+  else{big="ไม่ท่วม";sub=fcLbl?"ทุกพยากรณ์ 12 ชม. รับไหว":scI>0?"ฝน "+scI+" มม./ชม. "+scH+" ชม. รับไหว":"ถ้าไม่มีฝนเพิ่ม";col="var(--ok)";frac=0}
+  const r=44,C=2*Math.PI*r;
+  $("countdown").innerHTML=`<svg viewBox="0 0 320 116" width="100%" role="img" aria-label="${esc(big+" "+sub)}">
+    <circle cx="58" cy="58" r="${r}" fill="none" stroke="var(--grid)" stroke-width="10"/>
+    <circle cx="58" cy="58" r="${r}" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(C*frac).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 58 58)"/>
+    <path d="M58 32v26l15 9" stroke="${col}" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <text x="118" y="62" class="big" style="font-size:${big.length>6?30:38}px;fill:${col}">${esc(big)}</text>
+    <text x="119" y="88" class="lbl">${esc(sub)}</text></svg>`;
+}
+function firstBelow(pts){for(const p of pts){if(p.V<P.storage)return(p.t-NOW())/H}return null}
+
+function drawScheme(sim,out,md,road,ci){
+  const W=900,Hh=330,run=S.pumps.p7==="run",gateOpen=S.gate==="open";
+  const fillFrac=Math.min(1,sim.V/P.storage),over=Math.max(0,sim.V-P.storage);
+  const lvlMax=Math.max(200,P.thrCanalCrit+30,P.thrWarn+40);
+  const intensity=ci&&!ci.stale?ci.v:0;
+  const sx=600,sw=84,sTop=172,sBot=300,sY=v=>sBot-(Math.min(lvlMax,Math.max(0,v))/lvlMax)*(sBot-sTop);
+  const sumpLevel=md.sv!=null?sY(md.sv):sBot-Math.max(0.06,fillFrac)*(sBot-sTop)*0.85;
+  const cx0=760,cx1=892,cTop=150,cBot=300,cY=v=>cBot-(Math.min(lvlMax,Math.max(0,v))/lvlMax)*(cBot-cTop);
+  const canalLevel=md.cv!=null?cY(md.cv):null,roadY=206;
+  let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="ผังน้ำ หมู่บ้าน ท่อ บ่อซัมพ์ ประตูน้ำ คลอง">`;
+  s+=`<defs><clipPath id="cpPipe"><rect x="60" y="234" width="${sx-60}" height="22" rx="11"/></clipPath><linearGradient id="gw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--water2)"/><stop offset="1" stop-color="var(--water)"/></linearGradient></defs>`;
+  s+=`<rect x="0" y="0" width="${W}" height="${roadY}" fill="var(--sky)"/>`;
+  const cl=(x,y,k,o)=>`<g transform="translate(${x} ${y}) scale(${k})" opacity="${o}"><ellipse cx="0" cy="10" rx="44" ry="20" fill="var(--metal)"/><ellipse cx="-22" cy="4" rx="24" ry="18" fill="var(--metal)"/><ellipse cx="18" cy="-4" rx="28" ry="24" fill="var(--metal)"/></g>`;
+  const co=intensity>0?.75:.3;
+  s+=cl(170,48,1,co)+cl(340,38,.8,co);
+  const nd=Math.min(30,Math.round(intensity*0.8));
+  for(let i=0;i<nd;i++){const x=110+((i*53)%300),y=76+((i*29)%40);s+=`<line class="${reduce?"":"drop"}" style="animation-delay:${((i%7)*0.13).toFixed(2)}s" x1="${x}" y1="${y}" x2="${x-4}" y2="${y+12}" stroke="var(--rain)" stroke-width="2.4" stroke-linecap="round"/>`}
+  s+=`<text x="16" y="24" class="lblb">${intensity>0?"ฝน "+fmt(intensity,1)+" มม./ชม.":"ไม่มีฝนตอนนี้"}</text>`;
+  s+=`<rect x="0" y="${roadY}" width="${W}" height="${Hh-roadY}" fill="var(--soil)"/>`;
+  s+=`<rect x="20" y="${roadY-6}" width="560" height="8" fill="var(--road)"/>`;
+  for(let i=0;i<5;i++){const x=40+i*104;s+=`<rect x="${x}" y="${roadY-58}" width="62" height="52" fill="var(--house)" stroke="var(--soil2)"/><path d="M${x-6} ${roadY-56} L${x+31} ${roadY-86} L${x+68} ${roadY-56}Z" fill="var(--roof)"/><rect x="${x+24}" y="${roadY-30}" width="14" height="24" fill="var(--soil2)"/>`}
+  const fd=road!=null?road:(over>0?Math.min(40,over/areaM2()*100*8):0);
+  if(fd>0){const hgt=Math.min(40,6+fd*1.4);s+=`<rect x="20" y="${roadY-hgt+2}" width="560" height="${hgt}" fill="var(--water2)" opacity=".55"/><text x="300" y="${roadY-hgt-8}" text-anchor="middle" class="lblb" style="fill:var(--crit)">น้ำบนถนน ${road!=null?fmt(road)+" ซม.":"(ประเมิน)"}</text>`}
+  s+=`<text x="22" y="${roadY+22}" class="lblb">หมู่บ้าน</text>`;
+  for(let i=0;i<5;i++){const x=100+i*104;s+=`<rect x="${x}" y="${roadY+2}" width="8" height="32" fill="var(--soil2)"/>`}
+  s+=`<rect x="60" y="234" width="${sx-60}" height="22" rx="11" fill="var(--panel)" stroke="var(--metal)" stroke-width="2"/>`;
+  s+=`<g clip-path="url(#cpPipe)"><rect x="60" y="${(256-22*Math.max(0.08,fillFrac)).toFixed(1)}" width="${sx-60}" height="22" fill="url(#gw)"/></g>`;
+  s+=`<text x="320" y="278" text-anchor="middle" class="lbl">ท่อระบาย · น้ำค้าง ${fmt(sim.V)} ลบ.ม.</text>`;
+  s+=`<rect x="${sx}" y="${sTop}" width="${sw}" height="${sBot-sTop}" fill="var(--panel)" stroke="var(--metal)" stroke-width="2.5"/>`;
+  s+=`<rect x="${sx+2}" y="${sumpLevel.toFixed(1)}" width="${sw-4}" height="${(sBot-sumpLevel-1).toFixed(1)}" fill="url(#gw)"/>`;
+  for(const [v,c] of [[P.thrWarn,"var(--crit)"],[P.thrStart,"var(--warn)"]]){const y=sY(v);s+=`<line x1="${sx}" x2="${sx+sw}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.5" stroke-dasharray="4 3"/>`}
+  s+=`<text x="${sx+sw/2}" y="${Hh-10}" text-anchor="middle" class="lblb">บ่อซัมพ์${md.sv!=null?" "+fmt(md.sv)+" ซม.":""}</text>`;
+  const px=sx+sw/2,py=sTop-26,pc=run?"var(--water)":S.pumps.p7==="down"?"var(--crit)":"var(--metal)";
+  s+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${sBot-14}" stroke="var(--metal)" stroke-width="5"/>`;
+  s+=`<circle cx="${px}" cy="${py}" r="18" fill="var(--panel)" stroke="${pc}" stroke-width="3.5"/><g class="${run&&!reduce?"spin":""}"><path d="M${px} ${py} L${px} ${py-11} M${px} ${py} L${px+9.5} ${py+5.5} M${px} ${py} L${px-9.5} ${py+5.5}" stroke="${pc}" stroke-width="3" stroke-linecap="round"/></g>`;
+  const dp=`M${px+18} ${py} H${cx0-30} Q${cx0-6} ${py} ${cx0-6} ${py+22} V${cTop+8}`;
+  s+=`<path d="${dp}" fill="none" stroke="var(--metal)" stroke-width="9" stroke-linecap="round"/>`;
+  if(run)s+=`<path d="${dp}" fill="none" stroke="var(--water2)" stroke-width="4" class="${reduce?"":"flow"}"/>`;
+  s+=`<text x="${(px+cx0)/2+10}" y="${py-24}" text-anchor="middle" class="lblb">${run?"ปั๊ม 6\" สูบ "+fmt(out.pump)+" ลบ.ม./ชม.":"ปั๊ม 6\" ไม่เดิน"}</text>`;
+  s+=`<rect x="${sx+sw}" y="272" width="${cx0-sx-sw}" height="20" fill="var(--panel)" stroke="var(--metal)" stroke-width="2"/>`;
+  if(gateOpen&&out.grav>0)s+=`<rect x="${sx+sw}" y="276" width="${cx0-sx-sw}" height="12" fill="var(--water2)"/>`;
+  const gx=cx0-26,gy=gateOpen?236:266;
+  s+=`<rect x="${gx-4}" y="230" width="4" height="68" fill="var(--metal)"/><rect x="${gx+14}" y="230" width="4" height="68" fill="var(--metal)"/>`;
+  s+=`<rect x="${gx}" y="${gy}" width="14" height="30" fill="${gateOpen?"var(--ok)":"var(--crit)"}" rx="2"/>`;
+  s+=`<text x="${gx+18}" y="224" text-anchor="end" class="lblb">ประตู${gateOpen?"เปิด":"ปิด"}</text>`;
+  s+=`<path d="M${cx0} ${cTop} V${cBot} H${cx1} V${cTop}" fill="var(--panel)" stroke="var(--soil2)" stroke-width="3"/>`;
+  if(canalLevel!=null)s+=`<rect x="${cx0+2}" y="${canalLevel.toFixed(1)}" width="${cx1-cx0-4}" height="${(cBot-canalLevel-1).toFixed(1)}" fill="url(#gw)"/>`;
+  else s+=`<text x="${(cx0+cx1)/2}" y="${(cTop+cBot)/2}" text-anchor="middle" class="lbl">ยังไม่มีค่า</text>`;
+  const ccy=cY(P.thrCanalCrit);s+=`<line x1="${cx0}" x2="${cx1}" y1="${ccy}" y2="${ccy}" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  s+=`<text x="${(cx0+cx1)/2}" y="${Hh-10}" text-anchor="middle" class="lblb">คลอง${md.cv!=null?" "+fmt(md.cv)+" ซม.":""}</text>`;
+  $("scheme").innerHTML=s+`</svg>`;
+}
+
+function drawFlowbar(inflow,out,scI){
+  const scIn=mmToM3(scI),mx=Math.max(inflow,out.total,scIn,1)*1.1,W=400,bw=W-180;
+  const row=(y,l,v,c,o)=>`<text x="0" y="${y+13}" class="lbl">${l}</text><rect x="100" y="${y}" width="${bw}" height="18" rx="4" fill="var(--grid)"/><rect x="100" y="${y}" width="${Math.max(2,bw*v/mx).toFixed(1)}" height="18" rx="4" fill="${c}" ${o?'opacity=".45"':""}/><text x="${W}" y="${y+13}" text-anchor="end" class="lblb">${fmt(v)}</text>`;
+  const rows=[row(0,"ฝนเข้าตอนนี้",inflow,"var(--rain)"),row(26,"สูบ/ไหลออก",out.total,"var(--water)")];
+  if(scI>0)rows.push(row(52,"ฝนคาดการณ์",scIn,"var(--rain)",1));
+  const Hh=scI>0?92:66;
+  $("flowbar").innerHTML=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="น้ำเข้าเทียบน้ำออก">${rows.join("")}<text x="${W}" y="${Hh-2}" text-anchor="end" class="lbl">ลบ.ม./ชม.</text></svg>`;
+}
+
+function drawLevels(md,road){
+  const items=[["บ่อ",md.sv,P.thrStart,P.thrWarn,Math.max(200,P.thrWarn+40)],["คลอง",md.cv,P.thrCanalCrit-30,P.thrCanalCrit,Math.max(200,P.thrCanalCrit+30)],["ถนน",road,P.roadL2,P.roadL3,Math.max(40,P.roadL3*2)]];
+  const W=400,bw=W/3;let s=`<svg viewBox="0 0 ${W} 150" width="100%" role="img" aria-label="ระดับน้ำ บ่อ คลอง ถนน">`;
+  items.forEach(([l,v,a,b,mx],i)=>{const x=i*bw+bw/2-24,top=12,bot=120,Y=q=>bot-(Math.min(mx,Math.max(0,q))/mx)*(bot-top);
+    const col=v==null?"var(--grid)":v>=b?"var(--crit)":v>=a?"var(--warn)":"var(--water)";
+    s+=`<rect x="${x}" y="${top}" width="28" height="${bot-top}" rx="5" fill="var(--grid)"/>`;
+    if(v!=null)s+=`<rect x="${x}" y="${Y(v).toFixed(1)}" width="28" height="${(bot-Y(v)).toFixed(1)}" rx="5" fill="${col}"/>`;
+    s+=`<line x1="${x-5}" x2="${x+33}" y1="${Y(a)}" y2="${Y(a)}" stroke="var(--warn)" stroke-width="2"/><line x1="${x-5}" x2="${x+33}" y1="${Y(b)}" y2="${Y(b)}" stroke="var(--crit)" stroke-width="2"/>`;
+    s+=`<text x="${x+38}" y="${((v!=null?Y(v):bot)+5).toFixed(1)}" class="lblb">${v==null?"–":fmt(v)}</text>`;
+    s+=`<text x="${x+14}" y="${bot+20}" text-anchor="middle" class="lbl">${l} (ซม.)</text>`});
+  $("levels").innerHTML=s+`</svg>`;
+}
+
+function drawCharts(sim,pr,scI,scH,live){
+  const W=760,padL=46,padR=12,now=Date.now(),T=NOW();
+  const t0=Math.min(sim.start,now-RANGE_H*H),t1=now+Math.max(4,Math.min(10,(scH||0)+4))*H*(RANGE_H>72?2:1);
+  const X=t=>padL+(t-t0)/(t1-t0)*(W-padL-padR);
+  const sp=t1-t0,ticks=[],step=sp>20*24*H?5*24*H:sp>6*24*H?24*H:sp>50*H?12*H:sp>18*H?3*H:sp>9*H?2*H:H;
+  for(let t=Math.ceil((t0+TZ)/step)*step-TZ;t<=t1;t+=step)ticks.push(t);
+  const tl=t=>{if(step<12*H)return hm(t);const d=bkk(t);return d.getUTCDate()+" "+TH_M[d.getUTCMonth()]+(step===12*H?" "+hm(t):"")};
+  {const Hh=210,top=12,bot=24,nice=niceMax(Math.max(P.storage*1.25,sim.peak*1.1,...pr.pts.map(p=>p.V),...FCP.map(x=>x.maxV))||1),Y=v=>top+(1-v/nice)*(Hh-top-bot);
+    let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="กราฟน้ำค้างในระบบ">`;
+    s+=`<rect x="${padL}" y="${Y(nice)}" width="${W-padL-padR}" height="${(Y(P.storage)-Y(nice)).toFixed(1)}" fill="var(--crit-bg)" opacity=".6"/>`;
+    for(let i=0;i<=4;i++){const v=nice*i/4;s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${fmt(v)}</text>`}
+    for(const t of ticks)s+=`<text x="${X(t).toFixed(1)}" y="${Hh-6}" text-anchor="middle">${tl(t)}</text>`;
+    s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(P.storage)}" y2="${Y(P.storage)}" stroke="var(--crit)" stroke-width="1.5"/>`;
+    s+=`<line x1="${X(now)}" x2="${X(now)}" y1="${top}" y2="${Y(0)}" stroke="var(--ink3)" stroke-dasharray="2 3"/><text x="${X(now)+4}" y="${top+12}" class="lbl">ตอนนี้</text>`;
+    if(sim.pts.length){const d=sim.pts.map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.V).toFixed(1)).join(" ");
+      s+=`<path d="${d} L${X(sim.pts[sim.pts.length-1].t).toFixed(1)} ${Y(0)} L${X(sim.pts[0].t).toFixed(1)} ${Y(0)} Z" fill="var(--water-soft)"/><path d="${d}" fill="none" stroke="var(--water)" stroke-width="2.2" stroke-linejoin="round"/>`}
+    const pd=pr.pts.filter(p=>p.t<=t1).map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.V).toFixed(1)).join(" ");
+    if(live)s+=`<path d="${pd}" fill="none" stroke="var(--water)" stroke-width="2.2" stroke-dasharray="5 4" opacity=".55"/>`;
+    if(live)for(const x of FCP){const d=x.pts.filter(p=>p.t<=t1).map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.V).toFixed(1)).join(" ");
+      s+=`<path d="${d}" fill="none" stroke="${x.col}" stroke-width="2.4" stroke-dasharray="7 4" opacity="${x.stale?.35:.95}"><title>${esc(x.f.label)}</title></path>`;
+      if(x.tFill!=null){const tf=now+x.tFill*H;s+=`<circle cx="${X(tf).toFixed(1)}" cy="${Y(P.storage).toFixed(1)}" r="4.5" fill="${x.col}" stroke="var(--panel)" stroke-width="2"/>`}}
+    else s+=`<line x1="${X(T)}" x2="${X(T)}" y1="${top}" y2="${Y(0)}" stroke="var(--watch)" stroke-width="2.5"/>`;
+    s+=`<circle cx="${X(T)}" cy="${Y(sim.V)}" r="5" fill="var(--water)" stroke="var(--panel)" stroke-width="2"/>`;
+    if(live&&pr.tFill!=null){const tf=now+pr.tFill*H;s+=`<circle cx="${X(tf)}" cy="${Y(P.storage)}" r="6" fill="var(--crit)" stroke="var(--panel)" stroke-width="2"/><text x="${X(tf)}" y="${Y(P.storage)-10}" text-anchor="middle" class="lblb" style="fill:var(--crit)">${hm(tf)}</text>`}
+    s+=`<line id="cross" x1="0" x2="0" y1="${top}" y2="${Y(0)}" stroke="var(--ink2)" visibility="hidden"/></svg><div class="tip" id="tip" hidden></div>`;
+    $("chartV").innerHTML=s;
+    const svg=$("chartV").querySelector("svg"),all=sim.pts.concat(pr.pts.slice(1));
+    svg.addEventListener("pointermove",e=>{const r=svg.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W;if(x<padL||x>W-padR)return;
+      const t=t0+(x-padL)/(W-padL-padR)*(t1-t0);let best=null,bd=1e18;for(const p of all){const dd=Math.abs(p.t-t);if(dd<bd){bd=dd;best=p}}if(!best)return;
+      const c=$("cross");c.setAttribute("x1",X(best.t));c.setAttribute("x2",X(best.t));c.setAttribute("visibility","visible");
+      const tip=$("tip");tip.innerHTML=`<b>${hm(best.t)}</b>${best.t>now?" คาดการณ์":""} · ${fmt(best.V)} ลบ.ม. (${fmt(best.V/P.storage*100)}%)`;tip.hidden=false;
+      tip.style.left=Math.min(r.width-tip.offsetWidth,Math.max(0,X(best.t)/W*r.width+10))+"px";tip.style.top="6px"});
+    svg.addEventListener("pointerleave",()=>{$("tip").hidden=true;$("cross").setAttribute("visibility","hidden")});
+  }
+  {const Hh=100,top=8,bot=22,iv=sim.iv.map(k=>({t0:k.t0,t1:k.t1,i:k.mm/((k.t1-k.t0)/H)})),fut=live&&scI&&scH?[{t0:now,t1:now+scH*H,i:scI,f:1}]:[];
+    const fcH=live?FCP.map(x=>({col:x.col,stale:x.stale,h:x.f.hourly.filter(e=>e.t+H>=now-H&&e.t<=t1)})):[];
+    const imax=niceMax(Math.max(10,...iv.map(k=>k.i),...fut.map(k=>k.i),...fcH.flatMap(x=>x.h.map(e=>e.mm)))),Y=v=>top+(1-v/imax)*(Hh-top-bot);
+    let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="กราฟความแรงฝน">`;
+    for(let i=0;i<=2;i++){const v=imax*i/2;s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${fmt(v)}</text>`}
+    for(const t of ticks)s+=`<text x="${X(t).toFixed(1)}" y="${Hh-5}" text-anchor="middle">${tl(t)}</text>`;
+    for(const k of iv.concat(fut)){if(k.t1<t0)continue;const x0=Math.max(padL,X(k.t0))+1,x1=X(k.t1)-1;if(x1<=x0)continue;
+      s+=`<rect x="${x0.toFixed(1)}" y="${Y(k.i).toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${Math.max(0,Y(0)-Y(k.i)).toFixed(1)}" rx="3" fill="var(--rain)" ${k.f?'opacity=".35"':""}><title>${hm(k.t0)}–${hm(k.t1)} · ${fmt(k.i,1)} มม./ชม.</title></rect>`}
+    for(const x of fcH){if(!x.h.length)continue;let d="";x.h.forEach((e,i)=>{const xa=Math.max(padL,X(e.t)),xb=Math.min(W-padR,X(e.t+H));d+=(i?"L":"M")+xa.toFixed(1)+" "+Y(e.mm).toFixed(1)+"L"+xb.toFixed(1)+" "+Y(e.mm).toFixed(1)});
+      s+=`<path d="${d}" fill="none" stroke="${x.col}" stroke-width="2" opacity="${x.stale?.35:.95}"/>`}
+    const cap=currentOut().total/(areaM2()*P.C)*1000;
+    if(cap<imax)s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(cap)}" y2="${Y(cap)}" stroke="var(--water)" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${W-padR}" y="${Y(cap)-4}" text-anchor="end" class="lbl">ปั๊มรับไหว ${fmt(cap,1)}</text>`;
+    s+=`<line x1="${X(now)}" x2="${X(now)}" y1="${top}" y2="${Y(0)}" stroke="var(--ink3)" stroke-dasharray="2 3"/>`;
+    if(!live)s+=`<line x1="${X(T)}" x2="${X(T)}" y1="${top}" y2="${Y(0)}" stroke="var(--watch)" stroke-width="2.5"/>`;
+    $("chartR").innerHTML=s+`</svg>`;
+  }
+}
+function drawTimeline(simAll,T,live){
+  const now=Date.now(),t0=now-RANGE_H*H,span=Math.max(H,now-t0);
+  const rg=$("tlRange");
+  rg.min=String(t0);rg.max=String(now);if(!dragging)rg.value=String(live?now:T);
+  $("tlStart").textContent=dhm(t0);$("tlEnd").textContent="ตอนนี้ "+hm(now);
+  $("tlCur").innerHTML=live?"<b>LIVE · ตอนนี้</b>":"<b>"+dhm(T)+"</b>";
+  const lb=$("tlLive");lb.classList.toggle("on",live);lb.setAttribute("aria-pressed",String(live));lb.lastChild.textContent=live?"LIVE":"กลับ LIVE";
+  $("tlPlay").textContent=playTimer?"❚❚ หยุด":"▶ เล่น";
+  document.querySelectorAll("#rngSeg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.h===RANGE_H)));
+  const W=1000,Hh=48,X=t=>(t-t0)/span*W,vmax=Math.max(P.storage*1.15,...simAll.pts.map(p=>p.V),1),Y=v=>Hh-2-(v/vmax)*(Hh-6);
+  let s=`<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" width="${W}" height="${Hh}" rx="6" fill="var(--grid)"/>`;
+  const imax=Math.max(10,...simAll.iv.map(k=>k.mm/((k.t1-k.t0)/H)));
+  for(const k of simAll.iv){const x0=Math.max(0,X(k.t0)),x1=X(k.t1);if(x1<=x0)continue;const hh=(k.mm/((k.t1-k.t0)/H))/imax*(Hh*0.45);s+=`<rect x="${x0.toFixed(1)}" y="0" width="${Math.max(1,x1-x0-1).toFixed(1)}" height="${hh.toFixed(1)}" fill="var(--rain)" opacity=".55"/>`}
+  if(simAll.pts.length){const d=simAll.pts.filter(p=>p.t>=t0).map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.V).toFixed(1)).join(" ");
+    s+=`<path d="${d} L${W} ${Y(simAll.V).toFixed(1)} L${W} ${Hh} L0 ${Hh} Z" fill="var(--water)" opacity=".35"/><path d="${d} L${W} ${Y(simAll.V).toFixed(1)}" fill="none" stroke="var(--water)" stroke-width="2" vector-effect="non-scaling-stroke"/>`}
+  s+=`<line x1="0" x2="${W}" y1="${Y(P.storage).toFixed(1)}" y2="${Y(P.storage).toFixed(1)}" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>`;
+  if(!live)s+=`<rect x="${X(T).toFixed(1)}" y="0" width="${(W-X(T)).toFixed(1)}" height="${Hh}" fill="var(--panel)" opacity=".55"/>`;
+  $("tlStrip").innerHTML=s+`</svg>`;
+  const first=R.length?Math.min(...R.map(r=>r.t)):now;
+  $("tlEmpty").hidden=!(first-t0>span*0.15);
+  $("tlEmpty").style.width=Math.max(0,Math.min(100,(first-t0)/span*100))+"%";
+}
+function stopPlay(){if(playTimer){clearInterval(playTimer);playTimer=null}}
+function niceMax(v){const e=Math.pow(10,Math.floor(Math.log10(v)));for(const m of [1,1.5,2,2.5,3,4,5,6,8,10])if(m*e>=v)return m*e;return 10*e}
+function drawLog(){
+  if(!R.length){$("log").innerHTML=`<tr><td class="tiny">ยังไม่มีค่าที่บันทึก</td></tr>`;return}
+  let h=`<tr><th>เวลา</th><th class="n">ฝน</th><th class="n">บ่อ</th><th class="n">คลอง</th><th class="n">ถนน</th><th class="n">สูบ</th><th></th><th></th></tr>`;
+  for(const r of R.slice(0,60))h+=`<tr><td class="num">${dhm(r.t)}</td><td class="n">${num(r.rain)==null?"–":fmt(r.rain,1)}</td><td class="n">${num(r.sump)==null?"–":fmt(r.sump)}</td><td class="n">${num(r.canal)==null?"–":fmt(r.canal)}</td><td class="n">${num(r.road)==null?"–":fmt(r.road)}</td><td class="n">${num(r.qOut)==null?"–":fmt(r.qOut)}</td><td>${r.est?'<span class="chip">ประมาณ</span>':""}</td><td>${canWrite?`<button class="del" data-del="${esc(r.id)}" type="button">ลบ</button>`:""}</td></tr>`;
+  $("log").innerHTML=h;
+}
+function drawParams(){
+  $("params").innerHTML=PLAB.map(([k,l])=>`<label class="f">${l}<input id="pp_${k}" type="number" step="any" value="${P[k]}"></label>`).join("")+
+    P.pumps.map(p=>`<label class="f">${esc(SHORT[p.id]||p.name)} (ลิตร/นาที)<input id="pq_${p.id}" type="number" step="any" min="0" value="${p.lpm}"></label>`).join("");
+  $("pform").querySelectorAll("input,button").forEach(el=>el.disabled=!canWrite);
+}
+
+/* ---------- storage (same data layer as v1) ---------- */
+const LS={get(k,d){try{const v=localStorage.getItem("wr_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("wr_"+k,JSON.stringify(v))}catch(e){}}};
+function mergeParams(x){const o=clone(DEF);if(!x)return o;for(const [k] of PLAB)if(num(x[k])!=null)o[k]=+x[k];if(Array.isArray(x.pumps))for(const p of o.pumps){const q=x.pumps.find(z=>z.id===p.id);if(q){if(num(q.lpm)!=null)p.lpm=+q.lpm;if(q.name)p.name=String(q.name)}}return o}
+function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;return o}
+async function saveState(){S.updatedAt=Date.now();if(mode==="db"){try{await db.doc("war/state").set(clone(S))}catch(e){fail(e)}}else LS.set("state",S);render()}
+async function saveParams(){if(mode==="db"){try{await db.doc("war/params").set(clone(P));toast("บันทึกตัวเลขแล้ว")}catch(e){fail(e)}}else{LS.set("params",P);toast("บันทึกในเครื่องนี้แล้ว")}render()}
+async function addReading(r){if(mode==="db"){try{await db.collection("readings").add(r);toast("บันทึกแล้ว")}catch(e){fail(e)}}else{r.id="l"+Date.now();R.unshift(r);R.sort((a,b)=>b.t-a.t);LS.set("readings",R);toast("บันทึกในเครื่องนี้แล้ว");render()}}
+async function delReading(id){if(mode==="db"){try{await db.doc("readings/"+id).delete();toast("ลบแล้ว")}catch(e){fail(e)}}else{R=R.filter(r=>r.id!==id);LS.set("readings",R);render()}}
+function fail(e){if(e&&e.code==="invalid_argument"){canWrite=false;$("storeTxt").textContent="ดูได้อย่างเดียว · ขอสิทธิ์ Contributor จากเจ้าของหน้า";render();drawParams();lockForm()}else if(e&&e.code==="quota_exceeded")toast("พื้นที่เก็บข้อมูลเต็ม");else toast("บันทึกไม่สำเร็จ ลองอีกครั้ง")}
+function lockForm(){$("entry").querySelectorAll("input,button").forEach(el=>el.disabled=!canWrite)}
+function useLocal(msg){FC=(LS.get("forecasts",[])||[]).map(cleanFC);mode="local";P=mergeParams(LS.get("params",null));S=mergeState(LS.get("state",null));R=LS.get("readings",[]).filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);$("storeTxt").textContent=msg;drawParams();render()}
+function subReadings(){
+  if(!db)return;if(unsubR)unsubR();
+  unsubR=db.collection("readings").where("t",">=",Date.now()-(RANGE_H+2)*H).orderBy("t","desc").limit(1000).onSnapshot(snap=>{R=snap.docs.map(d=>Object.assign({id:d.id},d.data())).filter(r=>num(r.t)!=null);render()},e=>{if(e&&e.code==="revoked")useLocal("การเชื่อมต่อข้อมูลกลางถูกยกเลิก")});
+}
+let pubFirst=true;
+async function connect(){
+  mode="public";canWrite=false;lockForm();
+  const g=async f=>{try{const r=await fetch("data/"+f+"?v="+Date.now(),{cache:"no-store"});return r.ok?await r.json():null}catch(e){return null}};
+  const [rd,fc,st,pr,meta]=await Promise.all([g("readings.json"),g("forecasts.json"),g("state.json"),g("params.json"),g("meta.json")]);
+  if(pr)P=mergeParams(pr);
+  if(st){const keep=pubFirst?null:S.scI,keepH=S.scH;S=mergeState(st);S.scI=keep;if(!pubFirst)S.scH=keepH}
+  if(Array.isArray(rd))R=rd.filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);
+  if(Array.isArray(fc))FC=fc.map(cleanFC);
+  if(pubFirst){$("scI").value="";pubFirst=false}
+  const up=meta&&meta.updatedAt?" · อัปเดตล่าสุด "+dhm(meta.updatedAt):"";
+  $("storeTxt").textContent=(rd||fc)?"หน้านี้ดูอย่างเดียว · ดึงข้อมูลใหม่อัตโนมัติ"+up:"โหลดข้อมูลไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง";
+  drawParams();render();
+}
+setInterval(()=>{if(!document.hidden)connect()},5*60*1000);
+
+/* ---------- events ---------- */
+const NEXT={run:"stand",stand:"down",down:"run"};
+$("pumps").addEventListener("click",e=>{const b=e.target.closest("button[data-p]");if(!b||!canWrite)return;const cur=S.pumps[b.dataset.p]||"stand";S.pumps=Object.assign({},S.pumps,{[b.dataset.p]:NEXT[cur]});saveState()});
+$("gateSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-g]");if(!b||!canWrite)return;S.gate=b.dataset.g;saveState()});
+let scTimer;function onScen(){clearTimeout(scTimer);scTimer=setTimeout(()=>{S.scI=num($("scI").value);S.scH=num($("scH").value)??0;if(canWrite)saveState();else render()},600)}
+$("scI").addEventListener("input",onScen);$("scH").addEventListener("input",onScen);
+$("entry").addEventListener("submit",e=>{e.preventDefault();if(!canWrite)return;
+  const t=fromInput($("eT").value);if(t==null){$("eMsg").textContent="ใส่เวลาให้ครบ";return}
+  const r={t,rain:num($("eRain").value),sump:num($("eSump").value),canal:num($("eCanal").value),road:num($("eRoad").value),note:$("eNote").value.trim().slice(0,140),qOut:Math.round(currentOut().total)};
+  if(r.rain==null&&r.sump==null&&r.canal==null&&r.road==null){$("eMsg").textContent="กรอกอย่างน้อยหนึ่งค่า";return}
+  const prev=R.find(x=>num(x.rain)!=null&&x.t<t);
+  if(r.rain!=null&&prev&&dayKey(prev.t)===dayKey(t)&&r.rain<prev.rain){$("eMsg").textContent="ฝนสะสมน้อยกว่าค่าก่อนหน้า ตรวจอีกครั้ง";return}
+  $("eMsg").textContent="";addReading(r);["eRain","eSump","eCanal","eRoad","eNote"].forEach(id=>$(id).value="");$("eT").value=toInput(Date.now())});
+$("log").addEventListener("click",e=>{const b=e.target.closest("button[data-del]");if(!b)return;if(b.dataset.confirm!=="1"){b.dataset.confirm="1";b.textContent="ยืนยัน";setTimeout(()=>{b.dataset.confirm="";b.textContent="ลบ"},3000);return}delReading(b.dataset.del)});
+$("pform").addEventListener("submit",e=>{e.preventDefault();if(!canWrite)return;for(const [k] of PLAB){const v=num($("pp_"+k).value);if(v!=null)P[k]=v}for(const p of P.pumps){const v=num($("pq_"+p.id).value);if(v!=null)p.lpm=Math.max(0,v)}saveParams()});
+$("pReset").addEventListener("click",()=>{if(!canWrite)return;P=clone(DEF);drawParams();saveParams()});
+$("rngSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-h]");if(!b)return;RANGE_H=+b.dataset.h;try{localStorage.setItem("wr_range",String(RANGE_H))}catch(err){}stopPlay();viewT=null;if(mode==="db")subReadings();render()});
+$("tlRange").addEventListener("pointerdown",()=>{dragging=true});
+window.addEventListener("pointerup",()=>{dragging=false});
+$("tlRange").addEventListener("input",()=>{stopPlay();const v=+$("tlRange").value;viewT=v>=Date.now()-2*MIN?null:v;render()});
+$("tlLive").addEventListener("click",()=>{stopPlay();viewT=viewT==null?Date.now()-MIN:null;render()});
+$("tlPlay").addEventListener("click",()=>{
+  if(playTimer){stopPlay();render();return}
+  const t0=+$("tlRange").min,now=Date.now();
+  if(viewT==null||viewT>=now-5*MIN)viewT=t0;
+  const stepMs=Math.max(5*MIN,(now-t0)/120);
+  playTimer=setInterval(()=>{viewT+=stepMs;if(viewT>=Date.now()){viewT=null;stopPlay()}render()},160);
+  render();
+});
+$("eT").value=toInput(Date.now());
+drawParams();render();connect();
+setInterval(()=>{if(!document.hidden)render()},30000);
+})();
+</script>
+
+</body></html>
