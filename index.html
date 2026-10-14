@@ -181,6 +181,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     </div>
   </section>
 
+  <div id="simBar" style="display:none;position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:60;max-width:760px;margin:0 auto;box-shadow:0 6px 24px rgba(0,0,0,.25);gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;background:var(--panel);color:var(--ink);border:2px dashed var(--fc4);font-size:15px"><span><b>โหมดจำลอง</b> · ตัวเลขบนจอนี้เปลี่ยนตามที่คุณกด ไม่ใช่สถานะจริงของปั๊มและประตูน้ำ</span><button type="button" id="simReset" style="flex:none;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer">กลับค่าจริง</button></div>
   <div class="acts" id="actions" aria-live="polite"></div>
 
   <div class="hero">
@@ -519,10 +520,10 @@ function renderAt(simAll,T,live){
   h+=`<span></span><span class="h" style="grid-column:span ${rates.length}">ฝน มม./ชม.</span>`;
   $("heat").style.gridTemplateColumns=`auto repeat(${rates.length},minmax(0,1fr))`;$("heat").innerHTML=h;
 
-  $("pumps").innerHTML=P.pumps.map(p=>{const s=S.pumps[p.id]||"stand",sl=s==="run"?"เดิน":s==="down"?"เสีย":"พร้อม";return `<button type="button" class="pump" data-p="${p.id}" data-s="${s}" ${canWrite?"":"disabled"} aria-label="${esc(p.name)} ${sl}">${pumpIcon(s)}<span class="nm">${esc(SHORT[p.id]||p.name)}</span><span class="rt">${p.lpm?fmt(p.lpm*0.06)+" ลบ.ม./ชม.":"ไม่มีสเปก"}</span><span class="st">${sl}</span></button>`}).join("");
+  $("pumps").innerHTML=P.pumps.map(p=>{const s=S.pumps[p.id]||"stand",sl=s==="run"?"เดิน":s==="down"?"เสีย":"พร้อม";return `<button type="button" class="pump" data-p="${p.id}" data-s="${s}" ${canWrite||SIM_OK?"":"disabled"} aria-label="${esc(p.name)} ${sl}">${pumpIcon(s)}<span class="nm">${esc(SHORT[p.id]||p.name)}</span><span class="rt">${p.lpm?fmt(p.lpm*0.06)+" ลบ.ม./ชม.":"ไม่มีสเปก"}</span><span class="st">${sl}</span></button>`}).join("");
   $("pumpSum").textContent=`เดิน ${P.pumps.filter(p=>S.pumps[p.id]==="run").length}/${P.pumps.length}`;
   drawFlowbar(inflowNow,out,scI);
-  document.querySelectorAll("#gateSeg button").forEach(b=>{b.setAttribute("aria-pressed",String(b.dataset.g===S.gate));b.disabled=!canWrite});
+  document.querySelectorAll("#gateSeg button").forEach(b=>{b.setAttribute("aria-pressed",String(b.dataset.g===S.gate));b.disabled=!(canWrite||SIM_OK)});
 
   $("mode").innerHTML=`<span class="modeL">${md.m}</span><div><b>${esc(md.t)}</b><div class="tiny">${esc(md.d)}</div>${st&&st.rate>0&&md.sv<P.thrWarn?`<div class="tiny">บ่อขึ้น ${fmt(st.rate)} ซม./ชม. · ถึงเตือนใน ${dur((P.thrWarn-md.sv)/st.rate)}</div>`:""}</div>`;
   drawLevels(md,road);
@@ -724,7 +725,7 @@ function drawParams(){
 const LS={get(k,d){try{const v=localStorage.getItem("wr_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("wr_"+k,JSON.stringify(v))}catch(e){}}};
 function mergeParams(x){const o=clone(DEF);if(!x)return o;for(const [k] of PLAB)if(num(x[k])!=null)o[k]=+x[k];if(Array.isArray(x.pumps))for(const p of o.pumps){const q=x.pumps.find(z=>z.id===p.id);if(q){if(num(q.lpm)!=null)p.lpm=+q.lpm;if(q.name)p.name=String(q.name)}}return o}
 function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;return o}
-async function saveState(){S.updatedAt=Date.now();if(mode==="db"){try{await db.doc("war/state").set(clone(S))}catch(e){fail(e)}}else LS.set("state",S);render()}
+async function saveState(){if(mode==="public"){SIM=true;showSim();render();return}S.updatedAt=Date.now();if(mode==="db"){try{await db.doc("war/state").set(clone(S))}catch(e){fail(e)}}else LS.set("state",S);render()}
 async function saveParams(){if(mode==="db"){try{await db.doc("war/params").set(clone(P));toast("บันทึกตัวเลขแล้ว")}catch(e){fail(e)}}else{LS.set("params",P);toast("บันทึกในเครื่องนี้แล้ว")}render()}
 async function addReading(r){if(mode==="db"){try{await db.collection("readings").add(r);toast("บันทึกแล้ว")}catch(e){fail(e)}}else{r.id="l"+Date.now();R.unshift(r);R.sort((a,b)=>b.t-a.t);LS.set("readings",R);toast("บันทึกในเครื่องนี้แล้ว");render()}}
 async function delReading(id){if(mode==="db"){try{await db.doc("readings/"+id).delete();toast("ลบแล้ว")}catch(e){fail(e)}}else{R=R.filter(r=>r.id!==id);LS.set("readings",R);render()}}
@@ -735,13 +736,15 @@ function subReadings(){
   if(!db)return;if(unsubR)unsubR();
   unsubR=db.collection("readings").where("t",">=",Date.now()-(RANGE_H+2)*H).orderBy("t","desc").limit(1000).onSnapshot(snap=>{R=snap.docs.map(d=>Object.assign({id:d.id},d.data())).filter(r=>num(r.t)!=null);render()},e=>{if(e&&e.code==="revoked")useLocal("การเชื่อมต่อข้อมูลกลางถูกยกเลิก")});
 }
-let pubFirst=true;
+let pubFirst=true,SIM=false,REAL=null;const SIM_OK=true;
+function showSim(){const b=$("simBar");if(b)b.style.display=SIM?"flex":"none"}
+document.addEventListener("click",e=>{if(e.target&&e.target.id==="simReset"){SIM=false;if(REAL){S.pumps=Object.assign({},REAL.pumps);S.gate=REAL.gate}showSim();render()}});
 async function connect(){
   mode="public";canWrite=false;lockForm();
   const g=async f=>{try{const r=await fetch("data/"+f+"?v="+Date.now(),{cache:"no-store"});return r.ok?await r.json():null}catch(e){return null}};
   const [rd,fc,st,pr,meta]=await Promise.all([g("readings.json"),g("forecasts.json"),g("state.json"),g("params.json"),g("meta.json")]);
   if(pr)P=mergeParams(pr);
-  if(st){const keep=pubFirst?null:S.scI,keepH=S.scH;S=mergeState(st);S.scI=keep;if(!pubFirst)S.scH=keepH}
+  if(st){const keep=pubFirst?null:S.scI,keepH=S.scH,simP=S.pumps,simG=S.gate;REAL=mergeState(st);S=mergeState(st);S.scI=keep;if(!pubFirst)S.scH=keepH;if(SIM){S.pumps=simP;S.gate=simG}}
   if(Array.isArray(rd))R=rd.filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);
   if(Array.isArray(fc))FC=fc.map(cleanFC);
   if(pubFirst){$("scI").value="";pubFirst=false}
@@ -753,8 +756,8 @@ setInterval(()=>{if(!document.hidden)connect()},5*60*1000);
 
 /* ---------- events ---------- */
 const NEXT={run:"stand",stand:"down",down:"run"};
-$("pumps").addEventListener("click",e=>{const b=e.target.closest("button[data-p]");if(!b||!canWrite)return;const cur=S.pumps[b.dataset.p]||"stand";S.pumps=Object.assign({},S.pumps,{[b.dataset.p]:NEXT[cur]});saveState()});
-$("gateSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-g]");if(!b||!canWrite)return;S.gate=b.dataset.g;saveState()});
+$("pumps").addEventListener("click",e=>{const b=e.target.closest("button[data-p]");if(!b||!(canWrite||SIM_OK))return;const cur=S.pumps[b.dataset.p]||"stand";S.pumps=Object.assign({},S.pumps,{[b.dataset.p]:NEXT[cur]});saveState()});
+$("gateSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-g]");if(!b||!(canWrite||SIM_OK))return;S.gate=b.dataset.g;saveState()});
 let scTimer;function onScen(){clearTimeout(scTimer);scTimer=setTimeout(()=>{S.scI=num($("scI").value);S.scH=num($("scH").value)??0;if(canWrite)saveState();else render()},600)}
 $("scI").addEventListener("input",onScen);$("scH").addEventListener("input",onScen);
 $("entry").addEventListener("submit",e=>{e.preventDefault();if(!canWrite)return;
