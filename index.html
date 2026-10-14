@@ -110,7 +110,7 @@ a.btn{text-decoration:none;display:inline-block}
 .snapT{font-family:var(--display);font-weight:600}
 .snapSteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .snapSteps .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-.snap.busy #snapPick{opacity:.5;pointer-events:none}
+.snap.busy #snapPick,.snap.busy #csvPick{opacity:.5;pointer-events:none}
 #entry input.filled{outline:2px solid var(--fc3);outline-offset:1px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 a{color:var(--water)}
@@ -304,6 +304,14 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     <details class="drawer" hidden>
       <summary><span class="plus">+</span>บันทึกค่าใหม่</summary>
       <div class="in">
+        <div class="snap" id="csvBox">
+          <div class="snapT">นำเข้าไฟล์ CSV จากสถานีฝน (แม่นที่สุด)</div>
+          <ol class="snapSteps">
+            <li>เปิด <a href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">weather.bangkok.go.th ↗</a> เลือกสถานี <b>สนข.ทุ่งครุ (RF.TKU.01)</b> แล้วกดดาวน์โหลด CSV</li>
+            <li><label class="btn primary" id="csvPick">เลือกไฟล์ CSV<input id="csvFile" type="file" accept=".csv,text/csv" hidden></label></li>
+          </ol>
+          <div class="tiny" id="csvMsg" aria-live="polite">ระบบจะบันทึกฝนสะสมทุก 15 นาทีให้เอง ไม่ต้องกด บันทึก ซ้ำ</div>
+        </div>
         <div class="snap" id="snap">
           <div class="snapT">อัปเดตเร็วจากภาพหน้าจอ</div>
           <ol class="snapSteps">
@@ -749,7 +757,7 @@ async function saveParams(){if(mode==="db"){try{await db.doc("war/params").set(c
 async function addReading(r){if(mode==="db"){try{await db.collection("readings").add(r);toast("บันทึกแล้ว")}catch(e){fail(e)}}else{r.id="l"+Date.now();R.unshift(r);R.sort((a,b)=>b.t-a.t);LS.set("readings",R);toast("บันทึกในเครื่องนี้แล้ว");render()}}
 async function delReading(id){if(mode==="db"){try{await db.doc("readings/"+id).delete();toast("ลบแล้ว")}catch(e){fail(e)}}else{R=R.filter(r=>r.id!==id);LS.set("readings",R);render()}}
 function fail(e){if(e&&e.code==="invalid_argument"){canWrite=false;$("storeTxt").textContent="ดูได้อย่างเดียว · ขอสิทธิ์ Contributor จากเจ้าของหน้า";render();drawParams();lockForm()}else if(e&&e.code==="quota_exceeded")toast("พื้นที่เก็บข้อมูลเต็ม");else toast("บันทึกไม่สำเร็จ ลองอีกครั้ง")}
-function lockForm(){$("entry").querySelectorAll("input,button").forEach(el=>el.disabled=!canWrite);if(!canWrite){const g=$("snapGo"),n=$("snap");if(g)g.hidden=true;if(n)n.hidden=true}}
+function lockForm(){$("entry").querySelectorAll("input,button").forEach(el=>el.disabled=!canWrite);if(!canWrite){const g=$("snapGo"),n=$("snap"),c=$("csvBox");if(g)g.hidden=true;if(n)n.hidden=true;if(c)c.hidden=true}}
 function useLocal(msg){FC=(LS.get("forecasts",[])||[]).map(cleanFC);mode="local";P=mergeParams(LS.get("params",null));S=mergeState(LS.get("state",null));R=LS.get("readings",[]).filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);$("storeTxt").textContent=msg;drawParams();render()}
 function subReadings(){
   if(!db)return;if(unsubR)unsubR();
