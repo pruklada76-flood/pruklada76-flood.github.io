@@ -297,6 +297,15 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
           <li>ระดับเตือนตอนนี้เป็นค่าสมมติ (บ่อ 80/120 ซม. คลอง 150 ซม. ถนน 10/20 ซม.) ต้องวัดหน้างานแล้วแก้ใน "ตัวเลขที่ใช้คำนวณ"</li>
         </ul></details>
       </section>
+      <section class="card" id="riverCard" hidden>
+        <div class="row" style="justify-content:space-between"><h2>ระดับแม่น้ำเจ้าพระยา (ม.รทก.)</h2><span class="num" id="riverNow" style="font-size:.85rem"></span></div>
+        <p class="cap">สถานีสะพานกรุงเทพ ห่างหมู่บ้านราว 9 กม. ไม่ใช่ระดับคลองหลังหมู่บ้าน แต่บอกว่าน้ำขึ้นน้ำลงในแม่น้ำกำลังหนุนหรือไม่</p>
+        <div class="chartbox" id="chartRiver"></div>
+        <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li>ข้อมูลจาก thaiwater.net สถานี CPY015 แม่น้ำเจ้าพระยา สะพานกรุงเทพ ดึงอัตโนมัติทุกชั่วโมง หน่วยเป็นเมตรเทียบระดับน้ำทะเลปานกลาง (ม.รทก.)</li>
+          <li>คลองรางแม่น้ำ (WL.RMN.01) ยังไม่มีแหล่งข้อมูลอัตโนมัติ ช่วงที่แม่น้ำขึ้นสูง น้ำในคลองมักระบายออกช้าลง ควรปิดประตูน้ำและเตรียมปั๊ม</li>
+        </ul></details>
+      </section>
     </div>
   </div>
 
@@ -395,6 +404,7 @@ function fmt(n,d=0){return n==null?"–":Number(n).toLocaleString("en-US",{maxim
 function bkk(ms){return new Date(ms+TZ)}
 function hm(ms){const d=bkk(ms);return String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0")}
 const TH_M=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const riverOnly=r=>num(r.river)!=null&&num(r.rain)==null&&num(r.sump)==null&&num(r.canal)==null&&num(r.road)==null,LR=()=>R.find(r=>!riverOnly(r));
 function dhm(ms){const d=bkk(ms);return d.getUTCDate()+" "+TH_M[d.getUTCMonth()]+" "+hm(ms)}
 function dayKey(ms){return bkk(ms).toISOString().slice(0,10)}
 function toInput(ms){return bkk(ms).toISOString().slice(0,16)}
@@ -504,7 +514,7 @@ function renderAt(simAll,T,live){
   if(S.scI==null&&fcFresh.length){const worst=fcFresh.slice().sort((a,b)=>(a.tFill??1e9)-(b.tFill??1e9)||b.maxV-a.maxV)[0];cdPr=Object.assign({},pr,{tFill:worst.tFill});cdLbl=worst.f.label}
   $("manLbl").textContent=S.scI!=null?"สมมติเอง: ฝน "+S.scI+" มม./ชม. "+scH+" ชม.":"ถ้าฝนตามค่าล่าสุด ("+scI+" มม./ชม.)";
   $("fcLegend").innerHTML=!live?"":FCP.length?FCP.map(x=>`<span style="${x.stale?"opacity:.5":""}"><i class="sw" style="background:${x.col};height:4px"></i>${esc(x.f.label)} · อัปเดต ${x.f.issuedAt?hm(x.f.issuedAt):"–"} · ฝนรวม 12 ชม. ${fmt(x.tot,1)} มม.${x.f.source?` <a href="${esc(x.f.source)}" target="_blank" rel="noopener">ที่มา ↗</a>`:""}</span>`).join(""):`<span class="tiny">ยังไม่มีข้อมูลพยากรณ์จากแหล่งภายนอก (กำลังเชื่อมต่อ Open-Meteo / กรมอุตุฯ)</span>`;
-  const road=freshVal("road",3), last=R[0], overNow=sim.V>=P.storage;
+  const road=freshVal("road",3), last=LR(), overNow=sim.V>=P.storage;
   $("lastTxt").textContent=!live?"กำลังย้อนดู "+dhm(T):last?"ข้อมูล "+hm(last.t)+" · "+ago(last.t):"ยังไม่มีข้อมูล";
   $("freshDot").className="dot"+(live&&last&&Date.now()-last.t<45*MIN?"":" stale");
 
@@ -523,7 +533,7 @@ function renderAt(simAll,T,live){
   if(lv==="warn"||lv==="crit"){acts.push([lv,"วาง DELTON #4 #5 จุดต่ำ"]);acts.push([lv,"เตรียมเครื่องปั่นไฟ"])}
   if(lv==="crit"){acts.push(["crit","วาง #2 #3 #6 + กระสอบทราย"]);acts.push(["crit","ขอปั๊มเสริม ปภ. 1784"])}
   if(!overNow&&sim.peak>P.storage)acts.push(["watch","พีคล่าสุดเกินความจุ "+fmt(sim.peak-P.storage)+" ลบ.ม. ถ้าถนนไม่ขัง ให้เพิ่มค่าความจุ"]);
-  if(live&&R.length&&Date.now()-R[0].t>45*MIN&&lv!=="ok")acts.push(["warn","ข้อมูลเก่า บันทึกค่าใหม่"]);
+  if(live&&LR()&&Date.now()-LR().t>45*MIN&&lv!=="ok")acts.push(["warn","ข้อมูลเก่า บันทึกค่าใหม่"]);
   if(!live)acts.splice(0,acts.length,["watch","กำลังย้อนดูเวลา "+dhm(T)+" · กด LIVE เพื่อกลับมาดูปัจจุบัน"]);
   $("actions").innerHTML=acts.map(([c,t])=>`<span class="act ${c}">${c==="ok"?"":IC.alert}${esc(t)}</span>`).join("");
 
@@ -711,6 +721,16 @@ function drawCharts(sim,pr,scI,scH,live){
     if(!live)s+=`<line x1="${X(T)}" x2="${X(T)}" y1="${top}" y2="${Y(0)}" stroke="var(--watch)" stroke-width="2.5"/>`;
     $("chartR").innerHTML=s+`</svg>`;
   }
+  {const rv=R.filter(r=>num(r.river)!=null&&r.t>=t0&&r.t<=now+H).sort((a,b)=>a.t-b.t),card=$("riverCard");
+    if(card)card.hidden=!rv.length;
+    if(rv.length){const Hh=120,top=10,bot=22,vs=rv.map(r=>num(r.river)),lo=Math.floor((Math.min(...vs)-.1)*5)/5,hi=Math.ceil((Math.max(...vs)+.1)*5)/5,Y=v=>top+(1-(v-lo)/(hi-lo))*(Hh-top-bot),X2=t=>padL+(t-t0)/(now-t0)*(W-padL-padR);
+      let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="กราฟระดับแม่น้ำเจ้าพระยา">`;
+      for(let i=0;i<=2;i++){const v=lo+(hi-lo)*i/2;s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${v.toFixed(2)}</text>`}
+      for(const t of ticks)if(t<=now)s+=`<text x="${X2(t).toFixed(1)}" y="${Hh-5}" text-anchor="middle">${tl(t)}</text>`;
+      const d=rv.map((r,i)=>(i?"L":"M")+X2(r.t).toFixed(1)+" "+Y(num(r.river)).toFixed(1)).join(" ");
+      s+=`<path d="${d}" fill="none" stroke="var(--water)" stroke-width="2.2" stroke-linejoin="round"/>`;
+      for(const r of rv)s+=`<circle cx="${X2(r.t).toFixed(1)}" cy="${Y(num(r.river)).toFixed(1)}" r="${rv.length>40?1.5:3}" fill="var(--water)"><title>${dhm(r.t)} · ${num(r.river).toFixed(2)} ม.รทก.</title></circle>`;
+      $("chartRiver").innerHTML=s+`</svg>`;const l=rv[rv.length-1];$("riverNow").textContent=num(l.river).toFixed(2)+" ม. · "+dhm(l.t)}}
 }
 function drawTimeline(simAll,T,live){
   const now=Date.now(),t0=now-RANGE_H*H,span=Math.max(H,now-t0);
@@ -739,7 +759,7 @@ function niceMax(v){const e=Math.pow(10,Math.floor(Math.log10(v)));for(const m o
 function drawLog(){
   if(!R.length){$("log").innerHTML=`<tr><td class="tiny">ยังไม่มีค่าที่บันทึก</td></tr>`;return}
   let h=`<tr><th>เวลา</th><th class="n">ฝน</th><th class="n">บ่อ</th><th class="n">คลอง</th><th class="n">ถนน</th><th class="n">สูบ</th><th></th><th></th></tr>`;
-  for(const r of R.slice(0,60))h+=`<tr><td class="num">${dhm(r.t)}</td><td class="n">${num(r.rain)==null?"–":fmt(r.rain,1)}</td><td class="n">${num(r.sump)==null?"–":fmt(r.sump)}</td><td class="n">${num(r.canal)==null?"–":fmt(r.canal)}</td><td class="n">${num(r.road)==null?"–":fmt(r.road)}</td><td class="n">${num(r.qOut)==null?"–":fmt(r.qOut)}</td><td>${r.est?'<span class="chip">ประมาณ</span>':""}</td><td>${canWrite?`<button class="del" data-del="${esc(r.id)}" type="button">ลบ</button>`:""}</td></tr>`;
+  for(const r of R.filter(r=>!riverOnly(r)).slice(0,60))h+=`<tr><td class="num">${dhm(r.t)}</td><td class="n">${num(r.rain)==null?"–":fmt(r.rain,1)}</td><td class="n">${num(r.sump)==null?"–":fmt(r.sump)}</td><td class="n">${num(r.canal)==null?"–":fmt(r.canal)}</td><td class="n">${num(r.road)==null?"–":fmt(r.road)}</td><td class="n">${num(r.qOut)==null?"–":fmt(r.qOut)}</td><td>${r.est?'<span class="chip">ประมาณ</span>':""}</td><td>${canWrite?`<button class="del" data-del="${esc(r.id)}" type="button">ลบ</button>`:""}</td></tr>`;
   $("log").innerHTML=h;
 }
 function drawParams(){

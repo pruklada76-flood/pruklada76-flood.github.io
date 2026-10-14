@@ -37,7 +37,7 @@ for doc, label, model in [("openmeteo-best", "Open-Meteo (best match)", "best_ma
                 if loc.date() == y and v is not None: tot += v
             rid = "om" + y.strftime("%Y%m%d")  # same id the war-room feed uses, so the two never double up
             rd = [r for r in load("readings.json", []) if r.get("id") != rid]
-            if any(not r.get("est") and dt.datetime.fromtimestamp(r["t"] / 1000, BKK).date() == y for r in rd):
+            if any(not r.get("est") and r.get("rain") is not None and dt.datetime.fromtimestamp(r["t"] / 1000, BKK).date() == y for r in rd):
                 raise StopIteration  # real station readings exist for that day: don't add a model estimate
             t_end = int(dt.datetime.combine(y, dt.time(23, 59), BKK).timestamp() * 1000)
             rd.append({"id": rid, "t": t_end, "rain": round(tot, 1), "est": True, "src": "gh:openmeteo",
