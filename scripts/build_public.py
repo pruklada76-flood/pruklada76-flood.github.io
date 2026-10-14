@@ -11,8 +11,8 @@ def sub(old, new, count=1):
         sys.exit(f"pattern found {src.count(old)}x, expected {count}: {old[:60]}")
     src = src.replace(old, new)
 
-sub("<title>ห้องสั่งการน้ำหมู่บ้าน</title>", "<title>สถานการณ์น้ำหมู่บ้าน</title>")
-sub("<h1>ห้องสั่งการน้ำหมู่บ้าน</h1>", "<h1>สถานการณ์น้ำหมู่บ้าน</h1>")
+sub("<title>ห้องสั่งการน้ำหมู่บ้าน</title>", "<title>สถานการณ์น้ำ พฤกษ์ลดา ประชาอุทิศ 76</title>")
+sub("<h1>ห้องสั่งการน้ำหมู่บ้าน</h1>", "<h1>สถานการณ์น้ำ พฤกษ์ลดา ประชาอุทิศ 76</h1>")
 src = re.sub(r'<div id="noDb" hidden.*?</div>\n?', "", src, count=1, flags=re.S)
 # Hide the data-entry drawer: the public page is read-only.
 sub('<details class="drawer">\n      <summary><span class="plus">+</span>บันทึกค่าใหม่</summary>',
