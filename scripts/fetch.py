@@ -62,5 +62,19 @@ try:
     else: fails.append("canal: station not in thaiwater waterlevel_load")
 except Exception as e: fails.append(f"canal thaiwater: {e}")
 
+# 3) Fallback for the canal: the BMA drainage site's water-level table (may be behind a bot check).
+try:
+    import re, html as H_
+    req = urllib.request.Request("https://weather.bangkok.go.th/water", headers={"User-Agent": "Mozilla/5.0 (village-flood dashboard)"})
+    page = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "replace")
+    row = next((r for r in re.findall(r"<tr[^>]*>(.*?)</tr>", page, re.S) if "WL.RMN.01" in r), None)
+    if row:
+        cells = [H_.unescape(re.sub(r"<[^>]+>", " ", c)).split() for c in re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)]
+        canal = load("canal.json", {"station": "WL.RMN.01", "series": []})
+        canal.update(bma=[" ".join(c) for c in cells], bmaFetchedAt=now, source="https://weather.bangkok.go.th/water")
+        save("canal.json", canal)
+    else: fails.append("canal BMA: WL.RMN.01 row not found (bot check?)")
+except Exception as e: fails.append(f"canal BMA: {e}")
+
 meta = load("meta.json", {}); meta.update(updatedAt=now, fetchFails=fails); save("meta.json", meta)
 print(json.dumps({"fails": fails}, ensure_ascii=False))
