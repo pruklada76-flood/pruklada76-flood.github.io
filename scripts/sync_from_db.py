@@ -17,6 +17,9 @@ old = json.loads((data / "readings.json").read_text(encoding="utf-8")) if (data 
 mine = [r for r in old if str(r.get("src", "")).startswith("gh:")]
 war = [r for r in load_dir(dump / "readings") if isinstance(r.get("t"), (int, float))]
 ids = {r["id"] for r in war}
+bkk_day = lambda t: time.strftime("%Y-%m-%d", time.gmtime(t / 1000 + 7 * 3600))
+station_days = {bkk_day(r["t"]) for r in war if not r.get("est")}
+mine = [m for m in mine if bkk_day(m["t"]) not in station_days]  # real station data wins over model estimates
 readings = sorted([r for r in war + [m for m in mine if m["id"] not in ids] if r["t"] >= cut], key=lambda r: r["t"])
 write("readings.json", readings)
 for name in ("state", "params"):
