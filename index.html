@@ -105,6 +105,13 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
 .btn{font:inherit;font-weight:600;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px}
 .btn.primary{background:var(--water);border-color:var(--water);color:var(--panel)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
+a.btn{text-decoration:none;display:inline-block}
+.snap{border:1px dashed var(--water);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.snapT{font-family:var(--display);font-weight:600}
+.snapSteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.snapSteps .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.snap.busy #snapPick{opacity:.5;pointer-events:none}
+#entry input.filled{outline:2px solid var(--fc3);outline-offset:1px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 a{color:var(--water)}
 .tbl{overflow-x:auto}
@@ -159,6 +166,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     <div class="r">
       <span class="fresh"><i class="dot" id="freshDot"></i><span id="lastTxt">–</span></span>
       <span class="pill" id="pill">–</span>
+      <button type="button" class="btn primary" id="snapGo" hidden>📷 อัปเดตค่า</button>
     </div>
   </div>
 
@@ -296,7 +304,18 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     <details class="drawer" hidden>
       <summary><span class="plus">+</span>บันทึกค่าใหม่</summary>
       <div class="in">
-        <a class="tiny" href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">เปิดหน้าสถานีฝน สนข. ↗</a>
+        <div class="snap" id="snap">
+          <div class="snapT">อัปเดตเร็วจากภาพหน้าจอ</div>
+          <ol class="snapSteps">
+            <li>เปิดหน้าเว็บ แล้วแคปหน้าจอ
+              <div class="row"><a class="btn" href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">ฝนทุ่งครุ ↗</a><a class="btn" href="https://weather.bangkok.go.th/water" target="_blank" rel="noopener">ระดับน้ำคลอง ↗</a></div></li>
+            <li id="snapStep2">ส่งภาพเข้ามา (เลือกได้ 2 ภาพพร้อมกัน หรือกดวางภาพ)
+              <div class="row"><label class="btn primary" id="snapPick">เลือกภาพหน้าจอ<input id="snapFile" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden></label><button type="button" class="btn" id="snapStop" hidden>หยุด</button></div></li>
+            <li>ตรวจตัวเลขที่ระบบกรอกให้ด้านล่าง แล้วกด <b>บันทึก</b></li>
+          </ol>
+          <div class="tiny" id="snapMsg" aria-live="polite"></div>
+        </div>
+        <a class="tiny" id="snapAlt" href="https://weather.bangkok.go.th/" target="_blank" rel="noopener" hidden>เปิดหน้าสถานีฝน สนข. ↗</a>
         <form class="entry" id="entry">
           <label class="f">เวลา<input id="eT" type="datetime-local" required></label>
           <label class="f">ฝนสะสมวันนี้ มม.<input id="eRain" type="number" step="0.1" min="0" inputmode="decimal"></label>
@@ -730,7 +749,7 @@ async function saveParams(){if(mode==="db"){try{await db.doc("war/params").set(c
 async function addReading(r){if(mode==="db"){try{await db.collection("readings").add(r);toast("บันทึกแล้ว")}catch(e){fail(e)}}else{r.id="l"+Date.now();R.unshift(r);R.sort((a,b)=>b.t-a.t);LS.set("readings",R);toast("บันทึกในเครื่องนี้แล้ว");render()}}
 async function delReading(id){if(mode==="db"){try{await db.doc("readings/"+id).delete();toast("ลบแล้ว")}catch(e){fail(e)}}else{R=R.filter(r=>r.id!==id);LS.set("readings",R);render()}}
 function fail(e){if(e&&e.code==="invalid_argument"){canWrite=false;$("storeTxt").textContent="ดูได้อย่างเดียว · ขอสิทธิ์ Contributor จากเจ้าของหน้า";render();drawParams();lockForm()}else if(e&&e.code==="quota_exceeded")toast("พื้นที่เก็บข้อมูลเต็ม");else toast("บันทึกไม่สำเร็จ ลองอีกครั้ง")}
-function lockForm(){$("entry").querySelectorAll("input,button").forEach(el=>el.disabled=!canWrite)}
+function lockForm(){$("entry").querySelectorAll("input,button").forEach(el=>el.disabled=!canWrite);if(!canWrite){const g=$("snapGo"),n=$("snap");if(g)g.hidden=true;if(n)n.hidden=true}}
 function useLocal(msg){FC=(LS.get("forecasts",[])||[]).map(cleanFC);mode="local";P=mergeParams(LS.get("params",null));S=mergeState(LS.get("state",null));R=LS.get("readings",[]).filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);$("storeTxt").textContent=msg;drawParams();render()}
 function subReadings(){
   if(!db)return;if(unsubR)unsubR();
