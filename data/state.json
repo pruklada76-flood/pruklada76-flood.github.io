@@ -1,1 +1,1 @@
-{"gate":"closed","pumps":{"p1":"stand","p2":"run","p3":"run","p4":"run","p5":"run","p6":"run","p7":"run"},"scH":0,"scI":10,"updatedAt":1791991463730}
+{"gate":"closed","hist":[{"q":0,"t":1792037623408},{"q":0,"t":1792038996998},{"q":210,"t":1792039002313},{"q":0,"t":1792039005204},{"q":0,"t":1792039055171},{"q":0,"t":1792039056531}],"pumps":{"p1":"stand","p2":"stand","p3":"stand","p4":"stand","p5":"stand","p6":"stand","p7":"stand"},"scH":0,"scI":10,"updatedAt":1792039056531}
