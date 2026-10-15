@@ -141,7 +141,9 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .live.on .ld{animation:blink 1.4s ease-in-out infinite}
 @keyframes blink{50%{opacity:.25}}
 #tlEmpty{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.78rem;color:var(--ink3);pointer-events:none;text-align:center}
-.rng button{padding:4px 11px;font-size:.8rem}
+#tlEmpty[hidden]{display:none}
+.rng{flex-wrap:wrap;max-width:100%}
+.rng button{padding:4px 10px;font-size:.8rem;white-space:nowrap;flex:1 0 auto}
 .tlfoot{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
 .tllab{display:flex;justify-content:space-between;gap:8px;font-size:.76rem;color:var(--ink3);font-variant-numeric:tabular-nums}
 .tllab b{color:var(--ink);font-family:var(--display);font-size:.9rem}
@@ -160,7 +162,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
 <div class="wrap">
   <div class="top">
     <div>
-      <div class="tiny">หมู่บ้าน <span id="areaTxt">45</span> ไร่ · คลองรางขมิ้น · สถานีฝน RF.TKU.01 ทุ่งครุ</div>
+      <div class="tiny">หมู่บ้าน <span id="areaTxt">50</span> ไร่ · คลองรางจาก · สถานีฝน กทม. ใกล้หมู่บ้าน</div>
       <h1>สถานการณ์น้ำ พฤกษ์ลดา ประชาอุทิศ 76</h1>
     </div>
     <div class="r">
@@ -185,7 +187,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <li>สถานะปั๊มและประตูไม่ได้เก็บย้อนหลัง จึงแสดงสถานะปัจจุบันเสมอ ส่วนอัตราสูบในอดีตใช้ค่าที่บันทึกไว้ตอนกรอกข้อมูลแต่ละครั้ง</li>
       <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ข้อมูลที่บันทึกเก็บไว้ถาวร ช่วง 30 วันแสดงได้สูงสุด 1,000 ครั้งล่าสุด</li>
     </ul></details>
-    <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button></span>
+    <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="1">1 ชม.</button><button type="button" data-h="3">3 ชม.</button><button type="button" data-h="6">6 ชม.</button><button type="button" data-h="24">24 ชม.</button><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button></span>
     </div>
   </section>
 
@@ -199,7 +201,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
         <p class="cap">ภาพจำลองเส้นทางน้ำ: ฝนตกลงหมู่บ้าน → ไหลลงท่อระบาย → บ่อซัมพ์ → ปั๊มสูบหรือไหลผ่านประตูลงคลองรางขมิ้น</p>
         <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
           <li><b>เม็ดฝน</b>: ยิ่งฝนแรงยิ่งมีเม็ดฝนมาก มาจากค่าฝนสะสมของสถานี RF.TKU.01 ที่บันทึก (ส่วนต่างระหว่าง 2 ครั้ง หารด้วยเวลา)</li>
-          <li><b>น้ำในท่อ</b>: ความเต็มของท่อ = น้ำค้างในระบบ ÷ ความจุเก็บกัก (ตั้งไว้ 2,000 ลบ.ม.) เป็นค่าคำนวณ ไม่ใช่ค่าวัด</li>
+          <li><b>น้ำในท่อ</b>: ความเต็มของท่อ = น้ำค้างในระบบ ÷ ความจุท่อระบายในหมู่บ้าน (ราว 1,278 ลบ.ม. จากคลิปวัดท่อของหมู่บ้าน) เป็นค่าคำนวณ ไม่ใช่ค่าวัด</li>
           <li><b>บ่อซัมพ์และคลอง</b>: ระดับน้ำมาจากไม้วัดที่กรอก (ซม.) เส้นประส้ม = ระดับเริ่มสูบ เส้นประแดง = ระดับเตือน/วิกฤต ถ้ายังไม่กรอก บ่อจะแสดงตามค่าคำนวณ และคลองขึ้นว่า "ยังไม่มีค่า"</li>
           <li><b>ปั๊ม 6"</b>: หมุนเมื่อตั้งเป็น "เดิน" สีแดงคือเสีย · <b>ประตู</b> สีเขียว = เปิด สีแดง = ปิด</li>
           <li><b>น้ำบนถนน</b>: แสดงเมื่อกรอกความลึกน้ำบนถนน หรือเมื่อน้ำค้างเกินความจุเก็บกัก</li>
@@ -210,7 +212,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
         <li><b>ฝนสะสมวันนี้</b>: ค่า "ฝนสะสม 0.00 น.–ปัจจุบัน" ของสถานี สนข.ทุ่งครุ ครั้งล่าสุดที่บันทึก</li>
         <li><b>ความแรงฝนล่าสุด</b>: ฝนที่เพิ่มขึ้นระหว่าง 2 ครั้งที่บันทึก ÷ ช่วงเวลา (มม./ชม.) ถ้าไม่มีค่าใหม่เกิน 75 นาทีจะถือว่าฝนหยุด</li>
         <li><b>ระบายออกได้</b>: รวมอัตราสูบของปั๊มที่ตั้งเป็น "เดิน" (ค่าใช้งานจริงโดยประมาณจากตารางปั๊ม) บวกน้ำที่ไหลออกเองเมื่อเปิดประตูและบ่อสูงกว่าคลอง</li>
-        <li><b>ฝนที่รับไหวต่อเนื่อง</b>: ถ้าฝนตกแรงกว่านี้ น้ำจะเริ่มสะสม = อัตราระบาย ÷ (พื้นที่ 72,000 ตร.ม. × 0.8)</li>
+        <li><b>ฝนที่รับไหวต่อเนื่อง</b>: ถ้าฝนตกแรงกว่านี้ น้ำจะเริ่มสะสม = อัตราระบาย ÷ (พื้นที่ <span class="areaM2">80,000</span> ตร.ม. × สัดส่วนน้ำไหลนอง)</li>
       </ul></details>
     </div>
     <div class="side">
@@ -218,8 +220,8 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
         <h2 style="align-self:flex-start">ความจุเก็บกักที่ใช้ไป</h2>
         <div id="gauge" style="width:100%;max-width:300px"></div>
         <details class="info" style="align-self:stretch"><summary>ที่มาและวิธีอ่าน</summary><ul>
-          <li>% = น้ำที่ค้างอยู่ในท่อ บ่อพัก และบ่อซัมพ์ ÷ ความจุที่รับได้ก่อนน้ำเอ่อขึ้นถนน (2,000 ลบ.ม. เป็นค่าสมมติจากไฟล์แผนปั๊ม)</li>
-          <li>น้ำค้าง = น้ำฝนที่ไหลนอง (ฝน × 45 ไร่ × 0.8) − น้ำที่ปั๊มสูบออก สะสมตามเวลา</li>
+          <li>% = น้ำที่ค้างอยู่ในท่อ บ่อพัก และบ่อซัมพ์ ÷ ความจุที่รับได้ก่อนน้ำเอ่อขึ้นถนน (ปริมาตรท่อเมนและท่อในซอยราว 1,278 ลบ.ม. จากคลิปวัดท่อของหมู่บ้าน ยังไม่รวมบ่อซัมพ์)</li>
+          <li>น้ำค้าง = น้ำฝนที่ไหลนอง (ฝน × <span class="areaR">50</span> ไร่ × <span class="cR">1</span>) − น้ำที่ปั๊มสูบออก สะสมตามเวลา (ฝน 1 มม. บน 1 ตร.ม. = น้ำ 1 ลิตร)</li>
           <li>เขียว &lt;30% ปกติ · เหลือง 30–80% เฝ้าระวัง · ส้ม 80–100% เตือน · แดง ≥100% น้ำขึ้นถนนแล้ว</li>
         </ul></details>
       </section>
@@ -297,6 +299,17 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
           <li>ระดับเตือนตอนนี้เป็นค่าสมมติ (บ่อ 80/120 ซม. คลอง 150 ซม. ถนน 10/20 ซม.) ต้องวัดหน้างานแล้วแก้ใน "ตัวเลขที่ใช้คำนวณ"</li>
         </ul></details>
       </section>
+      <section class="card">
+        <div class="row" style="justify-content:space-between"><h2>ท่อระบายในหมู่บ้าน</h2><span class="num" id="pipeSum" style="font-size:.85rem"></span></div>
+        <p class="cap">ท่อเมน 2 แนวตามถนนหลัก กับท่อในซอย 24 แนว ทั้งหมดคือที่เก็บน้ำฝนก่อนน้ำจะเอ่อขึ้นถนน ปั๊ม 6" อยู่ท้ายหมู่บ้านฝั่งคลอง</p>
+        <div id="pipes"></div>
+        <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li><b>จากคลิประบบระบายน้ำหมู่บ้าน</b>: ท่อเมนยาว ~545 ม. รัศมี 0.5 ม. (เส้นผ่าน 1 ม.) 2 แนว · ท่อในซอยยาว ~140 ม. รัศมี 0.2 ม. (เส้นผ่าน 0.4 ม.) 24 แนว · วัดความยาวจาก Google Earth · ปริมาตร = π × r² × ยาว × จำนวน</li>
+          <li><b>จากคลิป</b>: 19 ก.พ. 2568 หมู่บ้านน้ำท่วม ฝนวันนั้นที่สถานี ปตร.คลองรางจาก-ประชาอุทิศ 17.5 มม. บนพื้นที่ 50 ไร่ = น้ำ ~1,400 ลบ.ม. มากกว่าความจุท่อ จึงเอ่อขึ้นถนน แบบจำลองจึงใช้ 50 ไร่ และนับน้ำฝนเข้าท่อเต็ม 100% (C = 1)</li>
+          <li><b>ค่าที่ยังเป็นสมมติฐาน</b>: ท่ออุดตัน 0% (ถ้ามีตะกอน ความจุจะลดลง น้ำขึ้นถนนเร็วขึ้น ใส่ % ได้ใน "ตัวเลขที่ใช้คำนวณ") · บ่อซัมพ์/บ่อพักยังไม่ได้วัด จึงยังไม่นับ</li>
+          <li>ปั๊ม 6" ยังใช้ค่าเดิม 210 ลบ.ม./ชม. (ในคลิปใช้ 60–120 ซึ่งน่าจะต่ำไป)</li>
+        </ul></details>
+      </section>
       <section class="card" id="wlCard" hidden>
         <div class="row" style="justify-content:space-between"><h2>ระดับน้ำคลองรางจาก (ม.รทก.)</h2><span class="num" id="wlNow" style="font-size:.85rem"></span></div>
         <p class="cap">ประตูระบายน้ำคลองรางจาก-ประชาอุทิศ (WL.RJK.01) เส้นทึบ = ด้านใน · เส้นประ = ด้านนอก · เส้นส้ม/แดง = ระดับเตือนภัย/วิกฤตด้านใน</p>
@@ -326,7 +339,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
         <div class="snap" id="csvBox">
           <div class="snapT">นำเข้าไฟล์ CSV จากสถานี กทม. (แม่นที่สุด)</div>
           <ol class="snapSteps">
-            <li>เปิด <a href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">weather.bangkok.go.th ↗</a> เลือกสถานีฝน <b>สนข.ทุ่งครุ (RF.TKU.01)</b> หรือสถานีระดับน้ำ <b>ปตร.คลองรางจาก-ประชาอุทิศ (WL.RJK.01)</b> แล้วกดดาวน์โหลด CSV</li>
+            <li>เปิด <a href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">weather.bangkok.go.th ↗</a> เลือกสถานีฝน <b>ปตร.คลองรางจาก-ประชาอุทิศ</b> (ใกล้หมู่บ้านที่สุด) หรือ <b>สนข.ทุ่งครุ</b> หรือสถานีระดับน้ำ <b>ปตร.คลองรางจาก-ประชาอุทิศ (WL.RJK.01)</b> แล้วกดดาวน์โหลด CSV</li>
             <li><span class="row" style="gap:8px;flex-wrap:wrap"><label class="btn primary" id="csvPick">🌧 CSV น้ำฝน<input id="csvFile" type="file" accept=".csv,text/csv" multiple hidden></label><label class="btn primary" id="csvPickWl">🌊 CSV ระดับน้ำคลอง<input id="csvFileWl" type="file" accept=".csv,text/csv" multiple hidden></label></span></li>
           </ol>
           <div class="tiny" id="csvMsg" aria-live="polite">ระบบดูให้เองว่าเป็นไฟล์ฝนหรือระดับน้ำ เลือกหลายไฟล์พร้อมกันได้ ไม่ต้องกด บันทึก ซ้ำ</div>
@@ -378,7 +391,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
 "use strict";
 const TZ=7*3600e3,H=3600e3,MIN=60e3;
 const DEF={
-  areaRai:45,C:0.8,storage:2000,gateW:0.8,gateH:0.8,Cd:0.6,pipeCap:600,
+  areaRai:50,C:1,storage:1278,mainL:545,mainD:1,mainN:2,soiL:140,soiD:0.4,soiN:24,silt:0,sumpVol:0,gateW:0.8,gateH:0.8,Cd:0.6,pipeCap:600,
   thrStop:40,thrStart:80,thrWarn:120,thrCanalCrit:150,roadL2:10,roadL3:20,
   pumps:[
     {id:"p7",name:'หอยโข่ง 6" 15 แรง (ประจำบ่อซัมพ์)',lpm:3500},
@@ -392,9 +405,11 @@ const DEF={
 };
 const SHORT={p7:'หอยโข่ง 6"',p4:'#4 DELTON',p5:'#5 DELTON',p2:'#2 TOTAL',p3:'#3 TOTAL',p6:'#6 ZUZUMI',p1:'#1'};
 const DEF_STATE={pumps:{p7:"run"},gate:"open",scI:null,scH:2};
-const PLAB=[["areaRai","พื้นที่รับน้ำ (ไร่)"],["C","สัดส่วนน้ำไหลนอง"],["storage","ความจุเก็บกัก (ลบ.ม.)"],["pipeCap","ท่อไหลออกเองสูงสุด (ลบ.ม./ชม.)"],
+const PLAB=[["areaRai","พื้นที่รับน้ำ (ไร่)"],["C","สัดส่วนน้ำไหลนอง"],["mainL","ท่อเมน: ยาว (ม.)"],["mainD","ท่อเมน: เส้นผ่าน (ม.)"],["mainN","ท่อเมน: จำนวนแนว"],
+  ["soiL","ท่อในซอย: ยาว (ม.)"],["soiD","ท่อในซอย: เส้นผ่าน (ม.)"],["soiN","ท่อในซอย: จำนวนแนว"],["silt","ท่ออุดตัน/ตะกอน (%)"],["sumpVol","บ่อซัมพ์+บ่อพัก (ลบ.ม.)"],["pipeCap","ท่อไหลออกเองสูงสุด (ลบ.ม./ชม.)"],
   ["gateW","ช่องประตูกว้าง (ม.)"],["gateH","ช่องประตูสูง (ม.)"],["thrStop","บ่อ: หยุดสูบ (ซม.)"],["thrStart","บ่อ: เริ่มสูบ (ซม.)"],
   ["thrWarn","บ่อ: เตือน (ซม.)"],["thrCanalCrit","คลอง: วิกฤต (ซม.)"],["roadL2","ถนน ระดับ 2 (ซม.)"],["roadL3","ถนน ระดับ 3 (ซม.)"]];
+withStorage(DEF);
 let P=clone(DEF),S=clone(DEF_STATE),R=[],db=null,canWrite=true,mode="init";
 let viewT=null,NOWV=null,playTimer=null,dragging=false,unsubR=null,FC=[],FCP=[];
 const FCC=["var(--fc1)","var(--fc2)","var(--fc3)","var(--fc4)"];
@@ -405,7 +420,8 @@ function projectHourly(V0,hourly,out,horizon=12){
     V=Math.max(0,V+(mmToM3(i)-out)*dt);maxV=Math.max(maxV,V);if(tFill==null&&V>=P.storage&&V0<P.storage)tFill=s*dt;if(s%2===0)pts.push({t,V})}
   return{pts,tFill,maxV,tot};
 }
-let RANGE_H=36;try{const v=+localStorage.getItem("wr_range");if([36,72,168,720].includes(v))RANGE_H=v}catch(e){}
+let VIEW_H=36;try{const v=+localStorage.getItem("wr_range");if([1,3,6,24,36,72,168,720].includes(v))VIEW_H=v}catch(e){}
+let RANGE_H=Math.max(36,VIEW_H);// data/simulation window; short views only zoom the display
 const NOW=()=>NOWV??Date.now();
 const $=id=>document.getElementById(id);
 function clone(o){return JSON.parse(JSON.stringify(o))}
@@ -508,7 +524,7 @@ function render(){
   drawLog();
 }
 function renderAt(simAll,T,live){
-  $("areaTxt").textContent=fmt(P.areaRai);
+  $("areaTxt").textContent=fmt(P.areaRai);document.querySelectorAll(".areaM2").forEach(e=>e.textContent=fmt(areaM2()));document.querySelectorAll(".areaR").forEach(e=>e.textContent=fmt(P.areaRai));document.querySelectorAll(".cR").forEach(e=>e.textContent=P.C);drawPipes();
   const sim=live?simAll:{pts:simAll.pts,iv:simAll.iv,start:simAll.start,V:vAt(simAll.pts,T),peak:Math.max(0,...simAll.pts.filter(p=>p.t<=T).map(p=>p.V))};
   const out=currentOut(),cap=out.total/(areaM2()*P.C)*1000;
   let ci;
@@ -636,7 +652,7 @@ function drawScheme(sim,out,md,road,ci){
   for(let i=0;i<5;i++){const x=100+i*104;s+=`<rect x="${x}" y="${roadY+2}" width="8" height="32" fill="var(--soil2)"/>`}
   s+=`<rect x="60" y="234" width="${sx-60}" height="22" rx="11" fill="var(--panel)" stroke="var(--metal)" stroke-width="2"/>`;
   s+=`<g clip-path="url(#cpPipe)"><rect x="60" y="${(256-22*Math.max(0.08,fillFrac)).toFixed(1)}" width="${sx-60}" height="22" fill="url(#gw)"/></g>`;
-  s+=`<text x="320" y="278" text-anchor="middle" class="lbl">ท่อระบาย · น้ำค้าง ${fmt(sim.V)} ลบ.ม.</text>`;
+  s+=`<text x="320" y="278" text-anchor="middle" class="lbl">ท่อระบาย Ø${fmt(P.mainD,1)} ม. · น้ำค้าง ${fmt(sim.V)} / ${fmt(P.storage)} ลบ.ม.</text>`;
   s+=`<rect x="${sx}" y="${sTop}" width="${sw}" height="${sBot-sTop}" fill="var(--panel)" stroke="var(--metal)" stroke-width="2.5"/>`;
   s+=`<rect x="${sx+2}" y="${sumpLevel.toFixed(1)}" width="${sw-4}" height="${(sBot-sumpLevel-1).toFixed(1)}" fill="url(#gw)"/>`;
   for(const [v,c] of [[P.thrWarn,"var(--crit)"],[P.thrStart,"var(--warn)"]]){const y=sY(v);s+=`<line x1="${sx}" x2="${sx+sw}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.5" stroke-dasharray="4 3"/>`}
@@ -665,6 +681,29 @@ function drawScheme(sim,out,md,road,ci){
   $("scheme").innerHTML=s+`</svg>`;
 }
 
+function drawPipes(){
+  const el=$("pipes");if(!el)return;const v=pipeVols(P),W=420,Hh=250,mx0=40,mx1=380,my=106,pump=(P.pumps.find(p=>p.id==="p7")||{lpm:0}).lpm*0.06;
+  const nS=Math.max(0,Math.round(P.soiN)),half=Math.ceil(nS/2),stub=42,silt=v.k<1;
+  let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="ผังท่อระบายในหมู่บ้าน">`;
+  s+=`<rect x="0" y="34" width="16" height="140" rx="3" fill="var(--water2)" opacity=".7"/><text x="0" y="186" class="lbl">คลอง</text>`;
+  s+=`<rect x="${W-14}" y="34" width="14" height="140" fill="var(--road)"/><text x="${W}" y="186" text-anchor="end" class="lbl">ถ.ประชาอุทิศ</text>`;
+  for(let i=0;i<half;i++){const x=mx1-12-i*((mx1-mx0-24)/Math.max(1,half-1));
+    s+=`<line x1="${x.toFixed(1)}" y1="${my-6}" x2="${x.toFixed(1)}" y2="${my-6-stub}" stroke="var(--water)" stroke-width="4" stroke-linecap="round" opacity=".75"/>`;
+    if(i+half<nS)s+=`<line x1="${x.toFixed(1)}" y1="${my+6}" x2="${x.toFixed(1)}" y2="${my+6+stub}" stroke="var(--water)" stroke-width="4" stroke-linecap="round" opacity=".75"/>`}
+  s+=`<rect x="${mx0}" y="${my-7}" width="${mx1-mx0}" height="14" rx="7" fill="var(--water)"/>`;
+  s+=`<circle cx="${mx0-8}" cy="${my}" r="9" fill="var(--panel)" stroke="var(--water)" stroke-width="3"/>`;
+  s+=`<text x="${mx0+4}" y="18" class="lblb">ท่อในซอย ${nS} แนว · Ø${fmt(P.soiD*100)} ซม. · ยาว ${fmt(P.soiL)} ม.</text>`;
+  s+=`<text x="${(mx0+mx1)/2}" y="${my+4}" text-anchor="middle" class="lbl" style="fill:var(--panel)">ท่อเมน ${fmt(P.mainN)} แนว · Ø${fmt(P.mainD,1)} ม. · ${fmt(P.mainL)} ม.</text>`;
+  s+=`<text x="${mx0-8}" y="${my+4}" text-anchor="middle" class="lbl" style="font-size:9px">ปั๊ม</text>`;
+  const by=196,bw=W-20,tot=Math.max(v.pipes+P.sumpVol,1),wS=bw*v.soi/tot,wM=bw*v.main/tot;
+  s+=`<rect x="10" y="${by}" width="${wM.toFixed(1)}" height="18" fill="var(--water)"/><rect x="${(10+wM).toFixed(1)}" y="${by}" width="${wS.toFixed(1)}" height="18" fill="var(--water)" opacity=".55"/>`;
+  if(P.sumpVol>0)s+=`<rect x="${(10+wM+wS).toFixed(1)}" y="${by}" width="${(bw-wM-wS).toFixed(1)}" height="18" fill="var(--water2)"/>`;
+  if(silt)s+=`<rect x="${(10+bw*(1-(1-v.k)*v.pipes/tot)).toFixed(1)}" y="${by}" width="${(bw*(1-v.k)*v.pipes/tot).toFixed(1)}" height="18" fill="var(--soil2)" opacity=".85"/>`;
+  s+=`<text x="12" y="${by+13}" class="lblb" style="fill:var(--panel)">ท่อเมน ${fmt(v.main)}</text><text x="${(12+wM).toFixed(1)}" y="${by+13}" class="lblb">ซอย ${fmt(v.soi)}</text>`;
+  const mmFull=P.storage/(areaM2()*P.C)*1000,hEmpty=pump>0?P.storage/pump:null;
+  s+=`<text x="10" y="${by+36}" class="lbl">รวม ${fmt(P.storage)} ลบ.ม.${silt?" (หักอุดตัน "+fmt(100-v.k*100)+"%)":""} · ฝน ~${fmt(mmFull,1)} มม. ท่อเต็ม${hEmpty?" · ปั๊ม 6\" สูบหมดใน ~"+fmt(hEmpty,1)+" ชม.":""}</text>`;
+  el.innerHTML=s+`</svg>`;$("pipeSum").textContent=fmt(P.storage)+" ลบ.ม.";
+}
 function drawFlowbar(inflow,out,scI){
   const scIn=mmToM3(scI),mx=Math.max(inflow,out.total,scIn,1)*1.1,W=400,bw=W-180;
   const row=(y,l,v,c,o)=>`<text x="0" y="${y+13}" class="lbl">${l}</text><rect x="100" y="${y}" width="${bw}" height="18" rx="4" fill="var(--grid)"/><rect x="100" y="${y}" width="${Math.max(2,bw*v/mx).toFixed(1)}" height="18" rx="4" fill="${c}" ${o?'opacity=".45"':""}/><text x="${W}" y="${y+13}" text-anchor="end" class="lblb">${fmt(v)}</text>`;
@@ -689,9 +728,9 @@ function drawLevels(md,road){
 
 function drawCharts(sim,pr,scI,scH,live){
   const W=760,padL=46,padR=12,now=Date.now(),T=NOW();
-  const t0=Math.min(sim.start,now-RANGE_H*H),t1=now+Math.max(4,Math.min(10,(scH||0)+4))*H*(RANGE_H>72?2:1);
+  const fut=Math.max(4,Math.min(10,(scH||0)+4))*(RANGE_H>72?2:1),t0=VIEW_H<36?now-VIEW_H*H:Math.min(sim.start,now-RANGE_H*H),t1=now+(VIEW_H<36?Math.min(fut,Math.max(0.5,VIEW_H/3)):fut)*H;
   const X=t=>padL+(t-t0)/(t1-t0)*(W-padL-padR);
-  const sp=t1-t0,ticks=[],step=sp>20*24*H?5*24*H:sp>6*24*H?24*H:sp>50*H?12*H:sp>18*H?3*H:sp>9*H?2*H:H;
+  const sp=t1-t0,ticks=[],step=sp>20*24*H?5*24*H:sp>6*24*H?24*H:sp>50*H?12*H:sp>18*H?3*H:sp>9*H?2*H:sp>4*H?H:sp>2*H?30*MIN:15*MIN;
   for(let t=Math.ceil((t0+TZ)/step)*step-TZ;t<=t1;t+=step)ticks.push(t);
   const tl=t=>{if(step<12*H)return hm(t);const d=bkk(t);return d.getUTCDate()+" "+TH_M[d.getUTCMonth()]+(step===12*H?" "+hm(t):"")};
   {const Hh=210,top=12,bot=24,nice=niceMax(Math.max(P.storage*1.25,sim.peak*1.1,...pr.pts.map(p=>p.V),...FCP.map(x=>x.maxV))||1),Y=v=>top+(1-v/nice)*(Hh-top-bot);
@@ -764,14 +803,14 @@ function drawCharts(sim,pr,scI,scH,live){
       $("chartRiver").innerHTML=s+`</svg>`;const l=rv[rv.length-1];$("riverNow").textContent=num(l.river).toFixed(2)+" ม. · "+dhm(l.t)}}
 }
 function drawTimeline(simAll,T,live){
-  const now=Date.now(),t0=now-RANGE_H*H,span=Math.max(H,now-t0);
+  const now=Date.now(),t0=now-VIEW_H*H,span=Math.max(H,now-t0);
   const rg=$("tlRange");
   rg.min=String(t0);rg.max=String(now);if(!dragging)rg.value=String(live?now:T);
   $("tlStart").textContent=dhm(t0);$("tlEnd").textContent="ตอนนี้ "+hm(now);
   $("tlCur").innerHTML=live?"<b>LIVE · ตอนนี้</b>":"<b>"+dhm(T)+"</b>";
   const lb=$("tlLive");lb.classList.toggle("on",live);lb.setAttribute("aria-pressed",String(live));lb.lastChild.textContent=live?"LIVE":"กลับ LIVE";
   $("tlPlay").textContent=playTimer?"❚❚ หยุด":"▶ เล่น";
-  document.querySelectorAll("#rngSeg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.h===RANGE_H)));
+  document.querySelectorAll("#rngSeg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.h===VIEW_H)));
   const W=1000,Hh=48,X=t=>(t-t0)/span*W,vmax=Math.max(P.storage*1.15,...simAll.pts.map(p=>p.V),1),Y=v=>Hh-2-(v/vmax)*(Hh-6);
   let s=`<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" width="${W}" height="${Hh}" rx="6" fill="var(--grid)"/>`;
   const imax=Math.max(10,...simAll.iv.map(k=>k.mm/((k.t1-k.t0)/H)));
@@ -795,13 +834,16 @@ function drawLog(){
 }
 function drawParams(){
   $("params").innerHTML=PLAB.map(([k,l])=>`<label class="f">${l}<input id="pp_${k}" type="number" step="any" value="${P[k]}"></label>`).join("")+
-    P.pumps.map(p=>`<label class="f">${esc(SHORT[p.id]||p.name)} (ลิตร/นาที)<input id="pq_${p.id}" type="number" step="any" min="0" value="${p.lpm}"></label>`).join("");
+    P.pumps.map(p=>`<label class="f">${esc(SHORT[p.id]||p.name)} (ลิตร/นาที)<input id="pq_${p.id}" type="number" step="any" min="0" value="${p.lpm}"></label>`).join("")+
+    `<div class="tiny" style="grid-column:1/-1">ความจุเก็บกักที่ใช้คำนวณ = ท่อ × (1 − อุดตัน) + บ่อ = <b>${fmt(P.storage)} ลบ.ม.</b> (คำนวณเอง)</div>`;
   $("pform").querySelectorAll("input,button").forEach(el=>el.disabled=!canWrite);
 }
 
 /* ---------- storage (same data layer as v1) ---------- */
 const LS={get(k,d){try{const v=localStorage.getItem("wr_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("wr_"+k,JSON.stringify(v))}catch(e){}}};
-function mergeParams(x){const o=clone(DEF);if(!x)return o;for(const [k] of PLAB)if(num(x[k])!=null)o[k]=+x[k];if(Array.isArray(x.pumps))for(const p of o.pumps){const q=x.pumps.find(z=>z.id===p.id);if(q){if(num(q.lpm)!=null)p.lpm=+q.lpm;if(q.name)p.name=String(q.name)}}return o}
+function pipeVols(o){const v=(d,l,n)=>Math.PI*(d/2)**2*l*n,main=v(o.mainD,o.mainL,o.mainN),soi=v(o.soiD,o.soiL,o.soiN),k=1-Math.min(95,Math.max(0,o.silt))/100;return{main,soi,pipes:main+soi,k,total:(main+soi)*k+Math.max(0,o.sumpVol)}}
+function withStorage(o){o.storage=Math.max(1,Math.round(pipeVols(o).total));return o}
+function mergeParams(x){const o=clone(DEF);if(!x)return withStorage(o);for(const [k] of PLAB)if(num(x[k])!=null)o[k]=+x[k];if(Array.isArray(x.pumps))for(const p of o.pumps){const q=x.pumps.find(z=>z.id===p.id);if(q){if(num(q.lpm)!=null)p.lpm=+q.lpm;if(q.name)p.name=String(q.name)}}return withStorage(o)}
 function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;return o}
 async function saveState(){if(mode==="public"){SIM=true;showSim();render();return}S.updatedAt=Date.now();if(mode==="db"){try{await db.doc("war/state").set(clone(S))}catch(e){fail(e)}}else LS.set("state",S);render()}
 async function saveParams(){if(mode==="db"){try{await db.doc("war/params").set(clone(P));toast("บันทึกตัวเลขแล้ว")}catch(e){fail(e)}}else{LS.set("params",P);toast("บันทึกในเครื่องนี้แล้ว")}render()}
@@ -846,9 +888,9 @@ $("entry").addEventListener("submit",e=>{e.preventDefault();if(!canWrite)return;
   if(r.rain!=null&&prev&&dayKey(prev.t)===dayKey(t)&&r.rain<prev.rain){$("eMsg").textContent="ฝนสะสมน้อยกว่าค่าก่อนหน้า ตรวจอีกครั้ง";return}
   $("eMsg").textContent="";addReading(r);["eRain","eSump","eCanal","eRoad","eNote"].forEach(id=>$(id).value="");$("eT").value=toInput(Date.now())});
 $("log").addEventListener("click",e=>{const b=e.target.closest("button[data-del]");if(!b)return;if(b.dataset.confirm!=="1"){b.dataset.confirm="1";b.textContent="ยืนยัน";setTimeout(()=>{b.dataset.confirm="";b.textContent="ลบ"},3000);return}delReading(b.dataset.del)});
-$("pform").addEventListener("submit",e=>{e.preventDefault();if(!canWrite)return;for(const [k] of PLAB){const v=num($("pp_"+k).value);if(v!=null)P[k]=v}for(const p of P.pumps){const v=num($("pq_"+p.id).value);if(v!=null)p.lpm=Math.max(0,v)}saveParams()});
+$("pform").addEventListener("submit",e=>{e.preventDefault();if(!canWrite)return;for(const [k] of PLAB){const v=num($("pp_"+k).value);if(v!=null)P[k]=v}for(const p of P.pumps){const v=num($("pq_"+p.id).value);if(v!=null)p.lpm=Math.max(0,v)}withStorage(P);drawParams();saveParams()});
 $("pReset").addEventListener("click",()=>{if(!canWrite)return;P=clone(DEF);drawParams();saveParams()});
-$("rngSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-h]");if(!b)return;RANGE_H=+b.dataset.h;try{localStorage.setItem("wr_range",String(RANGE_H))}catch(err){}stopPlay();viewT=null;if(mode==="db")subReadings();render()});
+$("rngSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-h]");if(!b)return;VIEW_H=+b.dataset.h;RANGE_H=Math.max(36,VIEW_H);try{localStorage.setItem("wr_range",String(VIEW_H))}catch(err){}stopPlay();viewT=null;if(mode==="db")subReadings();render()});
 $("tlRange").addEventListener("pointerdown",()=>{dragging=true});
 window.addEventListener("pointerup",()=>{dragging=false});
 $("tlRange").addEventListener("input",()=>{stopPlay();const v=+$("tlRange").value;viewT=v>=Date.now()-2*MIN?null:v;render()});
