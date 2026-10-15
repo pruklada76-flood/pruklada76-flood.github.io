@@ -110,7 +110,7 @@ a.btn{text-decoration:none;display:inline-block}
 .snapT{font-family:var(--display);font-weight:600}
 .snapSteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .snapSteps .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-.snap.busy #snapPick,.snap.busy #csvPick{opacity:.5;pointer-events:none}
+.snap.busy #snapPick,.snap.busy #csvPick,.snap.busy #csvPickWl{opacity:.5;pointer-events:none}
 #entry input.filled{outline:2px solid var(--fc3);outline-offset:1px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 a{color:var(--water)}
@@ -297,6 +297,16 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
           <li>ระดับเตือนตอนนี้เป็นค่าสมมติ (บ่อ 80/120 ซม. คลอง 150 ซม. ถนน 10/20 ซม.) ต้องวัดหน้างานแล้วแก้ใน "ตัวเลขที่ใช้คำนวณ"</li>
         </ul></details>
       </section>
+      <section class="card" id="wlCard" hidden>
+        <div class="row" style="justify-content:space-between"><h2>ระดับน้ำคลองรางจาก (ม.รทก.)</h2><span class="num" id="wlNow" style="font-size:.85rem"></span></div>
+        <p class="cap">ประตูระบายน้ำคลองรางจาก-ประชาอุทิศ (WL.RJK.01) เส้นทึบ = ด้านใน · เส้นประ = ด้านนอก · เส้นส้ม/แดง = ระดับเตือนภัย/วิกฤตด้านใน</p>
+        <div class="chartbox" id="chartWl"></div>
+        <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+          <li>ข้อมูลจากไฟล์ CSV ของสถานี WL.RJK.01 บน weather.bangkok.go.th (สำนักการระบายน้ำ กทม.) นำเข้าผ่านปุ่ม "นำเข้าไฟล์ CSV" ค่าเป็นเมตรเทียบระดับน้ำทะเลปานกลาง (ม.รทก.)</li>
+          <li>ระดับเตือนภัย/วิกฤตมาจากไฟล์ของ กทม. (ด้านใน 0.55/0.60 ม. · ด้านนอก 1.00/1.20 ม.) ถ้าด้านในเกินเส้นส้ม ให้เตรียมปั๊มและพิจารณาปิดประตูน้ำหมู่บ้าน</li>
+          <li>ค่านี้ใช้หน่วยต่างจากไม้วัดคลองที่กรอกเอง (ซม.) จึงยังไม่ใช้คำนวณโหมดประตูน้ำ</li>
+        </ul></details>
+      </section>
       <section class="card" id="riverCard" hidden>
         <div class="row" style="justify-content:space-between"><h2>ระดับแม่น้ำเจ้าพระยา (ม.รทก.)</h2><span class="num" id="riverNow" style="font-size:.85rem"></span></div>
         <p class="cap">สถานีสะพานกรุงเทพ ห่างหมู่บ้านราว 9 กม. ไม่ใช่ระดับคลองหลังหมู่บ้าน แต่บอกว่าน้ำขึ้นน้ำลงในแม่น้ำกำลังหนุนหรือไม่</p>
@@ -314,12 +324,12 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <summary><span class="plus">+</span>บันทึกค่าใหม่</summary>
       <div class="in">
         <div class="snap" id="csvBox">
-          <div class="snapT">นำเข้าไฟล์ CSV จากสถานีฝน (แม่นที่สุด)</div>
+          <div class="snapT">นำเข้าไฟล์ CSV จากสถานี กทม. (แม่นที่สุด)</div>
           <ol class="snapSteps">
-            <li>เปิด <a href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">weather.bangkok.go.th ↗</a> เลือกสถานี <b>สนข.ทุ่งครุ (RF.TKU.01)</b> แล้วกดดาวน์โหลด CSV</li>
-            <li><label class="btn primary" id="csvPick">เลือกไฟล์ CSV<input id="csvFile" type="file" accept=".csv,text/csv" hidden></label></li>
+            <li>เปิด <a href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">weather.bangkok.go.th ↗</a> เลือกสถานีฝน <b>สนข.ทุ่งครุ (RF.TKU.01)</b> หรือสถานีระดับน้ำ <b>ปตร.คลองรางจาก-ประชาอุทิศ (WL.RJK.01)</b> แล้วกดดาวน์โหลด CSV</li>
+            <li><span class="row" style="gap:8px;flex-wrap:wrap"><label class="btn primary" id="csvPick">🌧 CSV น้ำฝน<input id="csvFile" type="file" accept=".csv,text/csv" multiple hidden></label><label class="btn primary" id="csvPickWl">🌊 CSV ระดับน้ำคลอง<input id="csvFileWl" type="file" accept=".csv,text/csv" multiple hidden></label></span></li>
           </ol>
-          <div class="tiny" id="csvMsg" aria-live="polite">ระบบจะบันทึกฝนสะสมทุก 15 นาทีให้เอง ไม่ต้องกด บันทึก ซ้ำ</div>
+          <div class="tiny" id="csvMsg" aria-live="polite">ระบบดูให้เองว่าเป็นไฟล์ฝนหรือระดับน้ำ เลือกหลายไฟล์พร้อมกันได้ ไม่ต้องกด บันทึก ซ้ำ</div>
         </div>
         <div class="snap" id="snap">
           <div class="snapT">อัปเดตเร็วจากภาพหน้าจอ</div>
@@ -404,7 +414,8 @@ function fmt(n,d=0){return n==null?"–":Number(n).toLocaleString("en-US",{maxim
 function bkk(ms){return new Date(ms+TZ)}
 function hm(ms){const d=bkk(ms);return String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0")}
 const TH_M=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-const riverOnly=r=>num(r.river)!=null&&num(r.rain)==null&&num(r.sump)==null&&num(r.canal)==null&&num(r.road)==null,LR=()=>R.find(r=>!riverOnly(r));
+const riverOnly=r=>num(r.rain)==null&&num(r.sump)==null&&num(r.canal)==null&&num(r.road)==null&&(num(r.river)!=null||num(r.wlIn)!=null||num(r.wlOut)!=null),LR=()=>R.find(r=>!riverOnly(r));
+const WL_DEF={warnIn:.55,critIn:.6,warnOut:1,critOut:1.2};function wlThr(){const r=R.find(x=>num(x.critIn)!=null);const o={...WL_DEF};if(r)for(const k in o)if(num(r[k])!=null)o[k]=+r[k];return o}
 function dhm(ms){const d=bkk(ms);return d.getUTCDate()+" "+TH_M[d.getUTCMonth()]+" "+hm(ms)}
 function dayKey(ms){return bkk(ms).toISOString().slice(0,10)}
 function toInput(ms){return bkk(ms).toISOString().slice(0,16)}
@@ -533,6 +544,7 @@ function renderAt(simAll,T,live){
   if(lv==="warn"||lv==="crit"){acts.push([lv,"วาง DELTON #4 #5 จุดต่ำ"]);acts.push([lv,"เตรียมเครื่องปั่นไฟ"])}
   if(lv==="crit"){acts.push(["crit","วาง #2 #3 #6 + กระสอบทราย"]);acts.push(["crit","ขอปั๊มเสริม ปภ. 1784"])}
   if(!overNow&&sim.peak>P.storage)acts.push(["watch","พีคล่าสุดเกินความจุ "+fmt(sim.peak-P.storage)+" ลบ.ม. ถ้าถนนไม่ขัง ให้เพิ่มค่าความจุ"]);
+  {const w=freshVal("wlIn",3),th=wlThr();if(w!=null&&w>=th.warnIn)acts.push([w>=th.critIn?"crit":"warn","คลองรางจาก "+w.toFixed(2)+" ม. "+(w>=th.critIn?"เกินระดับวิกฤต":"ถึงระดับเตือนภัย")+" เตรียมปั๊ม/ปิดประตูน้ำ"])}
   if(live&&LR()&&Date.now()-LR().t>45*MIN&&lv!=="ok")acts.push(["warn","ข้อมูลเก่า บันทึกค่าใหม่"]);
   if(!live)acts.splice(0,acts.length,["watch","กำลังย้อนดูเวลา "+dhm(T)+" · กด LIVE เพื่อกลับมาดูปัจจุบัน"]);
   $("actions").innerHTML=acts.map(([c,t])=>`<span class="act ${c}">${c==="ok"?"":IC.alert}${esc(t)}</span>`).join("");
@@ -604,7 +616,8 @@ function drawScheme(sim,out,md,road,ci){
   const sx=600,sw=84,sTop=172,sBot=300,sY=v=>sBot-(Math.min(lvlMax,Math.max(0,v))/lvlMax)*(sBot-sTop);
   const sumpLevel=md.sv!=null?sY(md.sv):sBot-Math.max(0.06,fillFrac)*(sBot-sTop)*0.85;
   const cx0=760,cx1=892,cTop=150,cBot=300,cY=v=>cBot-(Math.min(lvlMax,Math.max(0,v))/lvlMax)*(cBot-cTop);
-  const canalLevel=md.cv!=null?cY(md.cv):null,roadY=206;
+  const wl=md.cv==null?freshVal("wlIn",12):null,wlR=latest("wlIn"),th=wlThr(),wlLo=-.6,wlHi=Math.max(1.4,th.critOut+.2),wY=v=>cBot-(Math.min(wlHi,Math.max(wlLo,v))-wlLo)/(wlHi-wlLo)*(cBot-cTop);
+  const canalLevel=md.cv!=null?cY(md.cv):wl!=null?wY(wl):null,roadY=206;
   let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="ผังน้ำ หมู่บ้าน ท่อ บ่อซัมพ์ ประตูน้ำ คลอง">`;
   s+=`<defs><clipPath id="cpPipe"><rect x="60" y="234" width="${sx-60}" height="22" rx="11"/></clipPath><linearGradient id="gw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--water2)"/><stop offset="1" stop-color="var(--water)"/></linearGradient></defs>`;
   s+=`<rect x="0" y="0" width="${W}" height="${roadY}" fill="var(--sky)"/>`;
@@ -644,8 +657,11 @@ function drawScheme(sim,out,md,road,ci){
   s+=`<path d="M${cx0} ${cTop} V${cBot} H${cx1} V${cTop}" fill="var(--panel)" stroke="var(--soil2)" stroke-width="3"/>`;
   if(canalLevel!=null)s+=`<rect x="${cx0+2}" y="${canalLevel.toFixed(1)}" width="${cx1-cx0-4}" height="${(cBot-canalLevel-1).toFixed(1)}" fill="url(#gw)"/>`;
   else s+=`<text x="${(cx0+cx1)/2}" y="${(cTop+cBot)/2}" text-anchor="middle" class="lbl">ยังไม่มีค่า</text>`;
-  const ccy=cY(P.thrCanalCrit);s+=`<line x1="${cx0}" x2="${cx1}" y1="${ccy}" y2="${ccy}" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
-  s+=`<text x="${(cx0+cx1)/2}" y="${Hh-10}" text-anchor="middle" class="lblb">คลอง${md.cv!=null?" "+fmt(md.cv)+" ซม.":""}</text>`;
+  if(wl!=null){for(const [v,c] of [[th.warnIn,"var(--warn)"],[th.critIn,"var(--crit)"]]){const y=wY(v);s+=`<line x1="${cx0}" x2="${cx1}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.5" stroke-dasharray="4 3"/>`}
+    s+=`<text x="${(cx0+cx1)/2}" y="${cTop-8}" text-anchor="middle" class="lblb" style="fill:${wl>=th.critIn?"var(--crit)":wl>=th.warnIn?"var(--warn)":"var(--ink)"}">${wl.toFixed(2)} ม.รทก.</text>`;
+    s+=`<text x="${(cx0+cx1)/2}" y="${Hh-10}" text-anchor="middle" class="lblb">คลองรางจาก${wlR&&NOW()-wlR.t>H?" ("+hm(wlR.t)+")":""}</text>`}
+  else{const ccy=cY(P.thrCanalCrit);s+=`<line x1="${cx0}" x2="${cx1}" y1="${ccy}" y2="${ccy}" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  s+=`<text x="${(cx0+cx1)/2}" y="${Hh-10}" text-anchor="middle" class="lblb">คลอง${md.cv!=null?" "+fmt(md.cv)+" ซม.":""}</text>`}
   $("scheme").innerHTML=s+`</svg>`;
 }
 
@@ -721,6 +737,21 @@ function drawCharts(sim,pr,scI,scH,live){
     if(!live)s+=`<line x1="${X(T)}" x2="${X(T)}" y1="${top}" y2="${Y(0)}" stroke="var(--watch)" stroke-width="2.5"/>`;
     $("chartR").innerHTML=s+`</svg>`;
   }
+  {const wv=R.filter(r=>(num(r.wlIn)!=null||num(r.wlOut)!=null)&&r.t>=t0&&r.t<=now+H).sort((a,b)=>a.t-b.t),card=$("wlCard"),th=wlThr();
+    if(card)card.hidden=!wv.length;
+    if(wv.length){const Hh=150,top=10,bot=22,vs=wv.flatMap(r=>[num(r.wlIn),num(r.wlOut)]).filter(v=>v!=null),mx=Math.max(...vs),showOut=mx>=th.warnOut-.15;
+      const lo=Math.floor((Math.min(...vs)-.1)*10)/10,hi=Math.ceil((Math.max(mx+.1,th.critIn+.1,showOut?th.critOut+.05:0))*10)/10,Y=v=>top+(1-(v-lo)/(hi-lo))*(Hh-top-bot),X2=t=>padL+(t-t0)/(now-t0)*(W-padL-padR);
+      let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="กราฟระดับน้ำคลองรางจาก">`;
+      for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3;s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${v.toFixed(2)}</text>`}
+      for(const t of ticks)if(t<=now)s+=`<text x="${X2(t).toFixed(1)}" y="${Hh-5}" text-anchor="middle">${tl(t)}</text>`;
+      const thl=[[th.warnIn,"var(--warn)","เตือนภัย "+th.warnIn.toFixed(2),""],[th.critIn,"var(--crit)","วิกฤต "+th.critIn.toFixed(2),""]];
+      if(showOut)thl.push([th.warnOut,"var(--warn)","เตือนภัยด้านนอก","2 4"],[th.critOut,"var(--crit)","วิกฤตด้านนอก","2 4"]);
+      thl.forEach(([v,c,l,da],i)=>{const rt=i%2===0;s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="${c}" stroke-width="1.5" ${da?`stroke-dasharray="${da}"`:""}/><text x="${rt?W-padR-4:padL+4}" y="${(Y(v)+(rt?12:-4)).toFixed(1)}" text-anchor="${rt?"end":"start"}" class="lbl" style="fill:${c}">${l}</text>`});
+      const line=(f,da)=>{const pts=wv.filter(r=>num(r[f])!=null);if(!pts.length)return "";return `<path d="${pts.map((r,i)=>(i?"L":"M")+X2(r.t).toFixed(1)+" "+Y(num(r[f])).toFixed(1)).join(" ")}" fill="none" stroke="var(--water)" stroke-width="${da?1.6:2.4}" ${da?`stroke-dasharray="${da}" opacity=".7"`:""} stroke-linejoin="round"/>`};
+      s+=line("wlOut","5 4")+line("wlIn","");
+      for(const r of wv)if(num(r.wlIn)!=null)s+=`<circle cx="${X2(r.t).toFixed(1)}" cy="${Y(num(r.wlIn)).toFixed(1)}" r="5" fill="transparent"><title>${dhm(r.t)} · ด้านใน ${num(r.wlIn).toFixed(2)} ม.${num(r.wlOut)!=null?" · ด้านนอก "+num(r.wlOut).toFixed(2)+" ม.":""}</title></circle>`;
+      $("chartWl").innerHTML=s+`</svg>`;const l=wv[wv.length-1],li=num(l.wlIn);
+      $("wlNow").innerHTML=li==null?dhm(l.t):`<span style="color:${li>=th.critIn?"var(--crit)":li>=th.warnIn?"var(--warn)":"inherit"}">ด้านใน ${li.toFixed(2)} ม.</span> · ${dhm(l.t)}`}}
   {const rv=R.filter(r=>num(r.river)!=null&&r.t>=t0&&r.t<=now+H).sort((a,b)=>a.t-b.t),card=$("riverCard");
     if(card)card.hidden=!rv.length;
     if(rv.length){const Hh=120,top=10,bot=22,vs=rv.map(r=>num(r.river)),lo=Math.floor((Math.min(...vs)-.1)*5)/5,hi=Math.ceil((Math.max(...vs)+.1)*5)/5,Y=v=>top+(1-(v-lo)/(hi-lo))*(Hh-top-bot),X2=t=>padL+(t-t0)/(now-t0)*(W-padL-padR);
