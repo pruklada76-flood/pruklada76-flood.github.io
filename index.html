@@ -466,6 +466,10 @@ let reduce=false;try{reduce=matchMedia("(prefers-reduced-motion: reduce)").match
 const areaM2=()=>P.areaRai*1600;
 const mmToM3=mm=>areaM2()*P.C*mm/1000;
 function pumpQ(st){let q=0;for(const p of P.pumps){if((st.pumps||{})[p.id]==="run")q+=(+p.lpm||0)*60/1000}return q}
+// Outflow in the past comes from the pump-state history, never from the buttons as they are now:
+// switching a pump off must only change what happens from now on.
+function defQ(){const p=P.pumps.find(x=>x.id==="p7");return p?(+p.lpm||0)*0.06:0}// before any recorded change: assume the 6" pump ran as usual
+function histQ(t){let q=null;for(const e of (S.hist||[])){if(e.t<=t)q=e.q;else break}return q==null?defQ():q}
 function gravityQ(gate,sump,canal){if(gate!=="open"||sump==null||canal==null||sump<=canal)return 0;const dh=(sump-canal)/100,a=P.gateW*P.gateH;return Math.min(P.Cd*a*Math.sqrt(2*9.81*dh)*3600,P.pipeCap)}
 function latest(f){for(const r of R){if(num(r[f])!=null)return r}return null}
 function freshVal(f,maxH){const r=latest(f);return r&&NOW()-r.t<maxH*H?+r[f]:null}
@@ -474,25 +478,25 @@ function rainIntervals(){
   const rs=R.filter(r=>num(r.rain)!=null).slice().sort((a,b)=>a.t-b.t);
   const use=rs.filter(r=>r.t>=Date.now()-RANGE_H*H),out=[];
   for(let i=0;i<use.length;i++){const r=use[i],prev=use[i-1];
-    if(!prev||r.t-prev.t>6*H){let mm=+r.rain;if(prev&&dayKey(prev.t)===dayKey(r.t))mm=Math.max(0,+r.rain-(+prev.rain));if(mm>0||!prev)out.push({t0:r.t-H,t1:r.t,mm,q:num(r.qOut)??currentOut().total,first:true});continue}
+    if(!prev||r.t-prev.t>6*H){let mm=+r.rain;if(prev&&dayKey(prev.t)===dayKey(r.t))mm=Math.max(0,+r.rain-(+prev.rain));if(mm>0||!prev)out.push({t0:r.t-H,t1:r.t,mm,q:histQ(r.t-H/2),first:true});continue}
     let mm=dayKey(prev.t)===dayKey(r.t)?+r.rain-(+prev.rain):+r.rain;if(mm<0)mm=+r.rain;
-    out.push({t0:prev.t,t1:r.t,mm,q:num(prev.qOut)??currentOut().total})}
+    out.push({t0:prev.t,t1:r.t,mm,q:histQ((prev.t+r.t)/2)})}
   return out;
 }
 function simulate(){
-  const iv=rainIntervals(),now=Date.now(),out=currentOut().total,pts=[];let V=0,peak=0,t;
+  const iv=rainIntervals(),now=Date.now(),pts=[];let V=0,peak=0,t;
   if(!iv.length)return{pts,V:0,peak:0,iv,start:now-6*H};
   t=iv[0].t0;pts.push({t,V:0});
   let lastQ=iv[0].q;
   for(const k of iv){
-    if(k.t0>t){const g=(k.t0-t)/H,gs=Math.max(1,Math.round(g*4)),gd=g/gs;for(let s=0;s<gs;s++){V=Math.max(0,V-lastQ*gd);t+=gd*H;pts.push({t,V})}t=k.t0}
+    if(k.t0>t){const g=(k.t0-t)/H,gs=Math.max(1,Math.round(g*4)),gd=g/gs;for(let s=0;s<gs;s++){V=Math.max(0,V-histQ(t+gd*H/2)*gd);t+=gd*H;pts.push({t,V})}t=k.t0}
     lastQ=k.q;
     const span=(k.t1-k.t0)/H;if(span<=0)continue;const inflow=mmToM3(k.mm)/span;
     const steps=Math.max(1,Math.round(span*12)),dt=span/steps;
     for(let s=0;s<steps;s++){V=Math.max(0,V+(inflow-k.q)*dt);t+=dt*H;peak=Math.max(peak,V);if(s%3===2||s===steps-1)pts.push({t,V})}
     t=k.t1}
   if(now>t){const span=(now-t)/H,steps=Math.max(1,Math.round(span*12)),dt=span/steps;
-    for(let s=0;s<steps;s++){V=Math.max(0,V-out*dt);t+=dt*H;if(s%3===2||s===steps-1)pts.push({t,V})}}
+    for(let s=0;s<steps;s++){V=Math.max(0,V-histQ(t+dt*H/2)*dt);t+=dt*H;if(s%3===2||s===steps-1)pts.push({t,V})}}
   return{pts,V,peak,iv,start:iv[0].t0};
 }
 function project(V0,i,hours,out,horizon=10){
@@ -883,8 +887,8 @@ const LS={get(k,d){try{const v=localStorage.getItem("wr_"+k);return v?JSON.parse
 function pipeVols(o){const v=(d,l,n)=>Math.PI*(d/2)**2*l*n,main=v(o.mainD,o.mainL,o.mainN),soi=v(o.soiD,o.soiL,o.soiN),k=1-Math.min(95,Math.max(0,o.silt))/100;return{main,soi,pipes:main+soi,k,total:(main+soi)*k+Math.max(0,o.sumpVol)}}
 function withStorage(o){o.storage=Math.max(1,Math.round(pipeVols(o).total));return o}
 function mergeParams(x){const o=clone(DEF);if(!x)return withStorage(o);for(const [k] of PLAB)if(num(x[k])!=null)o[k]=+x[k];if(Array.isArray(x.pumps))for(const p of o.pumps){const q=x.pumps.find(z=>z.id===p.id);if(q){if(num(q.lpm)!=null)p.lpm=+q.lpm;if(q.name)p.name=String(q.name)}}return withStorage(o)}
-function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;o.updatedAt=num(x.updatedAt);return o}
-async function saveState(){if(mode==="public"){SIM=true;showSim();render();return}S.updatedAt=Date.now();if(mode==="db"){try{await db.doc("war/state").set(clone(S))}catch(e){fail(e)}}else LS.set("state",S);render()}
+function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;o.updatedAt=num(x.updatedAt);o.hist=Array.isArray(x.hist)?x.hist.filter(e=>e&&num(e.t)!=null&&num(e.q)!=null).map(e=>({t:+e.t,q:+e.q})).sort((a,b)=>a.t-b.t).slice(-100):[];if(!o.hist.length&&o.updatedAt)o.hist=[{t:o.updatedAt,q:Math.round(pumpQ(o))}];return o}
+async function saveState(){if(mode==="public"){SIM=true;showSim();render();return}S.updatedAt=Date.now();S.hist=(S.hist||[]).concat({t:S.updatedAt,q:Math.round(pumpQ(S))}).slice(-100);if(mode==="db"){try{await db.doc("war/state").set(clone(S))}catch(e){fail(e)}}else LS.set("state",S);render()}
 async function saveParams(){if(mode==="db"){try{await db.doc("war/params").set(clone(P));toast("บันทึกตัวเลขแล้ว")}catch(e){fail(e)}}else{LS.set("params",P);toast("บันทึกในเครื่องนี้แล้ว")}render()}
 async function addReading(r){if(mode==="db"){try{await db.collection("readings").add(r);toast("บันทึกแล้ว")}catch(e){fail(e)}}else{r.id="l"+Date.now();R.unshift(r);R.sort((a,b)=>b.t-a.t);LS.set("readings",R);toast("บันทึกในเครื่องนี้แล้ว");render()}}
 async function delReading(id){if(mode==="db"){try{await db.doc("readings/"+id).delete();toast("ลบแล้ว")}catch(e){fail(e)}}else{R=R.filter(r=>r.id!==id);LS.set("readings",R);render()}}
