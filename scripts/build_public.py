@@ -36,7 +36,7 @@ async function connect(){
   mode="public";canWrite=false;lockForm();
   const g=async f=>{try{const r=await fetch("data/"+f+"?v="+Date.now(),{cache:"no-store"});return r.ok?await r.json():null}catch(e){return null}};
   const [rd,fc,st,pr,meta]=await Promise.all([g("readings.json"),g("forecasts.json"),g("state.json"),g("params.json"),g("meta.json")]);
-  if(pr)P=mergeParams(pr);
+  META=meta;if(pr)P=mergeParams(pr);
   if(st){const keep=pubFirst?null:S.scI,keepH=S.scH,simP=S.pumps,simG=S.gate;REAL=mergeState(st);S=mergeState(st);S.scI=keep;if(!pubFirst)S.scH=keepH;if(SIM){S.pumps=simP;S.gate=simG}}
   if(Array.isArray(rd))R=rd.filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);
   if(Array.isArray(fc))FC=fc.map(cleanFC);

@@ -142,6 +142,16 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 @keyframes blink{50%{opacity:.25}}
 #tlEmpty{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.78rem;color:var(--ink3);pointer-events:none;text-align:center}
 #tlEmpty[hidden]{display:none}
+.dstat{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.ds{display:flex;gap:9px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-width:0}
+.ds .ic{font-size:1.25rem;line-height:1;flex:0 0 auto}
+.ds .tx{min-width:0;flex:1}
+.ds .nm{font-size:.84rem;font-weight:600;line-height:1.25}
+.ds .mt{font-size:.74rem;color:var(--ink3);line-height:1.3}
+.bdg{display:inline-block;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:999px;margin-right:4px;vertical-align:1px}
+.bdg.auto{background:var(--ok-bg);color:var(--ok)}.bdg.man{background:var(--watch-bg);color:var(--watch)}.bdg.est{background:var(--rain-soft);color:var(--rain)}.bdg.none{background:var(--grid);color:var(--ink3)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:0}
+.dot.ok{background:var(--ok)}.dot.old{background:var(--warn)}.dot.no{background:var(--ink3)}
 .rng{flex-wrap:wrap;max-width:100%}
 .rng button{padding:4px 10px;font-size:.8rem;white-space:nowrap;flex:1 0 auto}
 .tlfoot{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
@@ -189,6 +199,15 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     </ul></details>
     <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="1">1 ชม.</button><button type="button" data-h="3">3 ชม.</button><button type="button" data-h="6">6 ชม.</button><button type="button" data-h="24">24 ชม.</button><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button></span>
     </div>
+  </section>
+
+  <section class="card" aria-label="สถานะข้อมูล">
+    <div class="row" style="justify-content:space-between"><h2>สถานะข้อมูล</h2><span class="legend"><span><span class="bdg auto">อัตโนมัติ</span></span><span><span class="bdg man">อัปโหลด/กรอกเอง</span></span><span><span class="bdg est">ค่าประมาณ</span></span><span><span class="bdg none">ยังไม่มี</span></span></span></div>
+    <div class="dstat" id="dstat"></div>
+    <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+      <li>จุดเขียว = ได้ข้อมูลใหม่ตามรอบ · จุดส้ม = ช้ากว่ารอบ (อาจดึงไม่สำเร็จหรือยังไม่มีใครอัปโหลด) · เวลาที่แสดงคือข้อมูลล่าสุดที่หน้านี้มี</li>
+      <li>เว็บ กทม. (weather.bangkok.go.th) กันการดึงอัตโนมัติ ฝนสถานีและระดับคลองจึงต้องดาวน์โหลด CSV มาอัปโหลดเอง</li>
+    </ul></details>
   </section>
 
   <div id="simBar" style="display:none;position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:60;max-width:760px;margin:0 auto;box-shadow:0 6px 24px rgba(0,0,0,.25);gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;background:var(--panel);color:var(--ink);border:2px dashed var(--fc4);font-size:15px"><span><b>โหมดจำลอง</b> · ตัวเลขบนจอนี้เปลี่ยนตามที่คุณกด ไม่ใช่สถานะจริงของปั๊มและประตูน้ำ</span><button type="button" id="simReset" style="flex:none;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer">กลับค่าจริง</button></div>
@@ -411,7 +430,7 @@ const PLAB=[["areaRai","พื้นที่รับน้ำ (ไร่)"],["
   ["thrWarn","บ่อ: เตือน (ซม.)"],["thrCanalCrit","คลอง: วิกฤต (ซม.)"],["roadL2","ถนน ระดับ 2 (ซม.)"],["roadL3","ถนน ระดับ 3 (ซม.)"]];
 withStorage(DEF);
 let P=clone(DEF),S=clone(DEF_STATE),R=[],db=null,canWrite=true,mode="init";
-let viewT=null,NOWV=null,playTimer=null,dragging=false,unsubR=null,FC=[],FCP=[];
+let META=null,viewT=null,NOWV=null,playTimer=null,dragging=false,unsubR=null,FC=[],FCP=[];
 const FCC=["var(--fc1)","var(--fc2)","var(--fc3)","var(--fc4)"];
 function cleanFC(d){const h=Array.isArray(d.hourly)?d.hourly.filter(e=>e&&num(e.t)!=null&&num(e.mm)!=null).map(e=>({t:+e.t,mm:Math.max(0,+e.mm)})).sort((a,b)=>a.t-b.t):[];return{id:String(d.id),label:String(d.label||d.id).slice(0,60),source:typeof d.source==="string"&&/^https:\/\//.test(d.source)?d.source:null,issuedAt:num(d.issuedAt),hourly:h}}
 function projectHourly(V0,hourly,out,horizon=12){
@@ -519,6 +538,7 @@ function render(){
   const RALL=R;
   if(!live){R=RALL.filter(r=>r.t<=T);NOWV=T}
   try{renderAt(simAll,T,live)}finally{R=RALL;NOWV=null}
+  drawStatus();
   document.body.classList.toggle("hist",!live);
   drawTimeline(simAll,T,live);
   drawLog();
@@ -704,6 +724,25 @@ function drawPipes(){
   s+=`<text x="10" y="${by+36}" class="lbl">รวม ${fmt(P.storage)} ลบ.ม.${silt?" (หักอุดตัน "+fmt(100-v.k*100)+"%)":""} · ฝน ~${fmt(mmFull,1)} มม. ท่อเต็ม${hEmpty?" · ปั๊ม 6\" สูบหมดใน ~"+fmt(hEmpty,1)+" ชม.":""}</text>`;
   el.innerHTML=s+`</svg>`;$("pipeSum").textContent=fmt(P.storage)+" ลบ.ม.";
 }
+function ago(t){if(t==null)return "ยังไม่มีข้อมูล";const m=Math.max(0,Math.round((Date.now()-t)/MIN));return m<1?"เมื่อสักครู่":m<60?m+" นาทีก่อน":m<48*60?Math.round(m/60)+" ชม.ก่อน":Math.round(m/1440)+" วันก่อน"}
+function drawStatus(){
+  const el=$("dstat");if(!el)return;
+  const last=f=>{let t=null;for(const r of R)if(f(r)&&(t==null||r.t>t))t=r.t;return t};
+  const om=FC.filter(f=>/open-?meteo/i.test(f.id+" "+(f.label||""))).map(f=>num(f.issuedAt)).filter(v=>v!=null);
+  const items=[
+    ["🌦","พยากรณ์ฝน 3 โมเดล (Open-Meteo)","auto","ทุก 15 นาที",om.length?Math.max(...om):null,45],
+    ["🌊","ระดับแม่น้ำเจ้าพระยา CPY015","auto","ทุกชั่วโมง",last(r=>num(r.river)!=null),150],
+    ["📈","ฝนย้อนหลังรายวัน (แบบจำลอง)","est","วันละครั้ง (เว้นวันที่มีฝนจริง)",last(r=>r.est&&num(r.rain)!=null&&/^(openmeteo|gh:)/.test(r.src||"")),4*24*60],
+    ["🌧","ฝนสถานีจริง กทม. (CSV)","man","อัปโหลดเมื่อฝนตก",last(r=>!r.est&&num(r.rain)!=null),null],
+    ["🏞","ระดับคลองรางจาก WL.RJK.01 (CSV)","man","อัปโหลดเมื่อน้ำขึ้น",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),null],
+    ["⚙️","สถานะปั๊ม · ประตูน้ำ","man","ทีมกดในห้องสั่งการ",num(S.updatedAt),null]];
+  if(mode==="public")items.push(["🔄","ส่งข้อมูลจากห้องสั่งการมาเว็บนี้","auto","ทุกชั่วโมง",META&&num(META.warroomSyncAt),150]);
+  items.push(["📏","ไม้วัดบ่อซัมพ์","man","กรอกเอง (ยังไม่ติดไม้วัด)",last(r=>num(r.sump)!=null),null],
+    ["📡","ระดับคลองอัตโนมัติ","none","ยังทำไม่ได้: เว็บ กทม. กันการดึง",null,null]);
+  const LB={auto:"อัตโนมัติ",man:"เอง",est:"ประมาณ",none:"ยังไม่มี"};
+  el.innerHTML=items.map(([ic,nm,k,fr,t,maxMin])=>{const d=t==null?"no":maxMin&&Date.now()-t>maxMin*MIN?"old":"ok";
+    return `<div class="ds"><span class="ic" aria-hidden="true">${ic}</span><div class="tx"><div class="nm">${esc(nm)}</div><div class="mt"><span class="bdg ${k}">${LB[k]}</span>${esc(fr)}</div>${k==="none"?"":`<div class="mt"><span class="dot ${d}"></span>${t==null?"ยังไม่มีข้อมูล":esc(ago(t))+" · "+(Date.now()-t<20*H?hm(t)+" น.":dhm(t))}</div>`}</div></div>`}).join("");
+}
 function drawFlowbar(inflow,out,scI){
   const scIn=mmToM3(scI),mx=Math.max(inflow,out.total,scIn,1)*1.1,W=400,bw=W-180;
   const row=(y,l,v,c,o)=>`<text x="0" y="${y+13}" class="lbl">${l}</text><rect x="100" y="${y}" width="${bw}" height="18" rx="4" fill="var(--grid)"/><rect x="100" y="${y}" width="${Math.max(2,bw*v/mx).toFixed(1)}" height="18" rx="4" fill="${c}" ${o?'opacity=".45"':""}/><text x="${W}" y="${y+13}" text-anchor="end" class="lblb">${fmt(v)}</text>`;
@@ -844,7 +883,7 @@ const LS={get(k,d){try{const v=localStorage.getItem("wr_"+k);return v?JSON.parse
 function pipeVols(o){const v=(d,l,n)=>Math.PI*(d/2)**2*l*n,main=v(o.mainD,o.mainL,o.mainN),soi=v(o.soiD,o.soiL,o.soiN),k=1-Math.min(95,Math.max(0,o.silt))/100;return{main,soi,pipes:main+soi,k,total:(main+soi)*k+Math.max(0,o.sumpVol)}}
 function withStorage(o){o.storage=Math.max(1,Math.round(pipeVols(o).total));return o}
 function mergeParams(x){const o=clone(DEF);if(!x)return withStorage(o);for(const [k] of PLAB)if(num(x[k])!=null)o[k]=+x[k];if(Array.isArray(x.pumps))for(const p of o.pumps){const q=x.pumps.find(z=>z.id===p.id);if(q){if(num(q.lpm)!=null)p.lpm=+q.lpm;if(q.name)p.name=String(q.name)}}return withStorage(o)}
-function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;return o}
+function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;o.updatedAt=num(x.updatedAt);return o}
 async function saveState(){if(mode==="public"){SIM=true;showSim();render();return}S.updatedAt=Date.now();if(mode==="db"){try{await db.doc("war/state").set(clone(S))}catch(e){fail(e)}}else LS.set("state",S);render()}
 async function saveParams(){if(mode==="db"){try{await db.doc("war/params").set(clone(P));toast("บันทึกตัวเลขแล้ว")}catch(e){fail(e)}}else{LS.set("params",P);toast("บันทึกในเครื่องนี้แล้ว")}render()}
 async function addReading(r){if(mode==="db"){try{await db.collection("readings").add(r);toast("บันทึกแล้ว")}catch(e){fail(e)}}else{r.id="l"+Date.now();R.unshift(r);R.sort((a,b)=>b.t-a.t);LS.set("readings",R);toast("บันทึกในเครื่องนี้แล้ว");render()}}
@@ -863,7 +902,7 @@ async function connect(){
   mode="public";canWrite=false;lockForm();
   const g=async f=>{try{const r=await fetch("data/"+f+"?v="+Date.now(),{cache:"no-store"});return r.ok?await r.json():null}catch(e){return null}};
   const [rd,fc,st,pr,meta]=await Promise.all([g("readings.json"),g("forecasts.json"),g("state.json"),g("params.json"),g("meta.json")]);
-  if(pr)P=mergeParams(pr);
+  META=meta;if(pr)P=mergeParams(pr);
   if(st){const keep=pubFirst?null:S.scI,keepH=S.scH,simP=S.pumps,simG=S.gate;REAL=mergeState(st);S=mergeState(st);S.scI=keep;if(!pubFirst)S.scH=keepH;if(SIM){S.pumps=simP;S.gate=simG}}
   if(Array.isArray(rd))R=rd.filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);
   if(Array.isArray(fc))FC=fc.map(cleanFC);
