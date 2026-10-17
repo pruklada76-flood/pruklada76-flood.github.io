@@ -475,10 +475,11 @@ function gravityQ(gate,sump,canal){if(gate!=="open"||sump==null||canal==null||su
 function latest(f){for(const r of R){if(num(r[f])!=null)return r}return null}
 function freshVal(f,maxH){const r=latest(f);return r&&NOW()-r.t<maxH*H?+r[f]:null}
 function currentOut(){const g=gravityQ(S.gate,freshVal("sump",6),freshVal("canal",6));const p=pumpQ(S);return{pump:p,grav:g,total:p+g}}
+// thaiwater and the BMA CSV are two copies of the same gauge; where both exist, keep the CSV (5-min, more exact). thaiwater only fills gaps.
+function rainRows(){const isTw=r=>/^thaiwater:/.test(r.src||""),csvT=R.filter(r=>num(r.rain)!=null&&!r.est&&!isTw(r)).map(r=>r.t);
+  return R.filter(r=>num(r.rain)!=null&&!(isTw(r)&&csvT.some(t=>Math.abs(t-r.t)<=90*MIN)))}
 function rainIntervals(){
-  const isTw=r=>/^thaiwater:/.test(r.src||""),csvT=R.filter(r=>num(r.rain)!=null&&!r.est&&!isTw(r)).map(r=>r.t);
-  // thaiwater and the BMA CSV are two copies of the same gauge; where both exist, keep the CSV (5-min, more exact)
-  const rs=R.filter(r=>num(r.rain)!=null&&!(isTw(r)&&csvT.some(t=>Math.abs(t-r.t)<=90*MIN))).slice().sort((a,b)=>a.t-b.t);
+  const rs=rainRows().slice().sort((a,b)=>a.t-b.t);
   const use=rs.filter(r=>r.t>=Date.now()-RANGE_H*H),out=[];
   for(let i=0;i<use.length;i++){const r=use[i],prev=use[i-1];
     if(!prev||r.t-prev.t>6*H){let mm=+r.rain;if(prev&&dayKey(prev.t)===dayKey(r.t))mm=Math.max(0,+r.rain-(+prev.rain));if(mm>0||!prev)out.push({t0:r.t-H,t1:r.t,mm,q:histQ(r.t-H/2),first:true});continue}
@@ -509,7 +510,7 @@ function project(V0,i,hours,out,horizon=10){
   return{pts,tFill,tDrain,maxV,end:V};
 }
 function curIntensity(){const iv=rainIntervals(),k=iv[iv.length-1];if(!k)return null;if(Date.now()-k.t1>75*MIN)return{v:0,stale:true};return{v:k.mm/((k.t1-k.t0)/H),stale:false,at:k.t1}}
-function todayRain(){const r=R.find(x=>num(x.rain)!=null);if(!r)return null;return{v:+r.rain,t:r.t,today:dayKey(r.t)===dayKey(NOW())}}
+function todayRain(){const r=rainRows()[0];if(!r)return null;return{v:+r.rain,t:r.t,today:dayKey(r.t)===dayKey(NOW())}}
 function sumpTrend(){const ss=R.filter(r=>num(r.sump)!=null).slice(0,2);if(ss.length<2||NOW()-ss[0].t>3*H)return null;const dh=(ss[0].t-ss[1].t)/H;if(dh<=0)return null;return{rate:(ss[0].sump-ss[1].sump)/dh,level:+ss[0].sump}}
 function decideMode(){
   const sv=freshVal("sump",6),cv=freshVal("canal",6),tr=sumpTrend(),allRun=P.pumps.filter(p=>p.lpm>0).every(p=>S.pumps[p.id]==="run");
