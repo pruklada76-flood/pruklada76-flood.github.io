@@ -44,6 +44,7 @@ h2{font-size:.95rem;font-weight:600;color:var(--ink2)}
 .act{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;font-weight:500;padding:5px 11px;border-radius:999px;background:var(--warn-bg);color:var(--ink)}
 .act.crit{background:var(--crit-bg)} .act.watch{background:var(--watch-bg)} .act.ok{background:var(--ok-bg)}
 .act svg{flex:none}
+.actsT{font-family:var(--display);font-weight:600;font-size:.85rem;color:var(--ink2);align-self:center;margin-right:2px}
 svg text{font-family:var(--body);font-size:12px;fill:var(--ink2)}
 svg .big{font-family:var(--display);font-weight:700;fill:var(--ink)}
 svg .lbl{font-size:12px;fill:var(--ink2)}
@@ -576,7 +577,7 @@ function renderAt(simAll,T,live){
   let lv="ok";
   const crit=overNow||md.m==="D"||(road!=null&&road>=P.roadL3)||(pr.tFill!=null&&pr.tFill<1);
   const warn=(road!=null&&road>=P.roadL2)||pct>=80||(pr.tFill!=null&&pr.tFill<3)||(md.sv!=null&&md.sv>=P.thrWarn);
-  const watch=(ci&&!ci.stale&&ci.v>0.5)||pct>=30||(md.sv!=null&&md.sv>=P.thrStart)||scI>cap;
+  const watch=(ci&&!ci.stale&&ci.v>0.5)||pct>=30||(md.sv!=null&&md.sv>=P.thrStart)||(scI>cap&&(scH||0)>0);
   if(R.length)lv=crit?"crit":warn?"warn":watch?"watch":"ok";
   $("pill").dataset.lv=lv;$("pill").textContent=LV[lv];
 
@@ -587,11 +588,12 @@ function renderAt(simAll,T,live){
   if(lv==="watch"){acts.push(["watch","พร่องน้ำบ่อซัมพ์"]);acts.push(["watch","อ่านไม้วัดทุก 30 นาที"])}
   if(lv==="warn"||lv==="crit"){acts.push([lv,"วาง DELTON #4 #5 จุดต่ำ"]);acts.push([lv,"เตรียมเครื่องปั่นไฟ"])}
   if(lv==="crit"){acts.push(["crit","วาง #2 #3 #6 + กระสอบทราย"]);acts.push(["crit","ขอปั๊มเสริม ปภ. 1784"])}
-  if(!overNow&&sim.peak>P.storage)acts.push(["watch","พีคล่าสุดเกินความจุ "+fmt(sim.peak-P.storage)+" ลบ.ม. ถ้าถนนไม่ขัง ให้เพิ่มค่าความจุ"]);
+  {const rec=sim.pts.filter(p=>p.t>=T-24*H&&p.t<=T),pk=rec.reduce((a,p)=>p.V>(a?a.V:0)?p:a,null);
+   if(canWrite&&!overNow&&pk&&pk.V>P.storage)acts.push(["watch","เช็กแบบจำลอง: "+dhm(pk.t)+" คำนวณว่าน้ำเกินท่อ "+fmt(pk.V-P.storage)+" ลบ.ม. ถ้าวันนั้นถนนไม่ท่วม ให้เพิ่มความจุใน “ตัวเลขที่ใช้คำนวณ”"])}
   {const w=freshVal("wlIn",3),th=wlThr();if(w!=null&&w>=th.warnIn)acts.push([w>=th.critIn?"crit":"warn","คลองรางจาก "+w.toFixed(2)+" ม. "+(w>=th.critIn?"เกินระดับวิกฤต":"ถึงระดับเตือนภัย")+" เตรียมปั๊ม/ปิดประตูน้ำ"])}
   if(live&&LR()&&Date.now()-LR().t>45*MIN&&lv!=="ok")acts.push(["warn","ข้อมูลเก่า บันทึกค่าใหม่"]);
   if(!live)acts.splice(0,acts.length,["watch","กำลังย้อนดูเวลา "+dhm(T)+" · กด LIVE เพื่อกลับมาดูปัจจุบัน"]);
-  $("actions").innerHTML=acts.map(([c,t])=>`<span class="act ${c}">${c==="ok"?"":IC.alert}${esc(t)}</span>`).join("");
+  $("actions").innerHTML=(acts.length&&live?`<span class="actsT">ควรทำตอนนี้</span>`:"")+acts.map(([c,t])=>`<span class="act ${c}">${c==="ok"?"":IC.alert}${esc(t)}</span>`).join("");
 
   drawScheme(sim,out,md,road,ci);
   drawGauge(pct,lv,sim.V);
