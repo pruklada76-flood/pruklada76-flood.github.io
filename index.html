@@ -348,7 +348,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     <div class="dstat" id="dstat"></div>
     <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
       <li>จุดเขียว = ได้ข้อมูลใหม่ตามรอบ · จุดส้ม = ช้ากว่ารอบ (อาจดึงไม่สำเร็จหรือยังไม่มีใครอัปโหลด) · เวลาที่แสดงคือข้อมูลล่าสุดที่หน้านี้มี</li>
-      <li>เว็บ กทม. (weather.bangkok.go.th) กันการดึงอัตโนมัติ ฝนสถานีและระดับคลองจึงต้องดาวน์โหลด CSV มาอัปโหลดเอง</li>
+      <li>ฝนสถานี สนข.ทุ่งครุ ดึงอัตโนมัติจาก thaiwater.net ทุกชั่วโมง แต่ thaiwater อัปเดตค่าของ กทม. ไม่สม่ำเสมอ (จุดส้ม = ค่าค้าง) · เว็บ กทม. (weather.bangkok.go.th) กันการดึงอัตโนมัติ ไฟล์ CSV จึงยังเป็นตัวสำรองที่แม่นที่สุด และระดับคลองยังต้องอัปโหลด CSV เอง</li>
     </ul></details>
   </section>
 
@@ -476,11 +476,13 @@ function latest(f){for(const r of R){if(num(r[f])!=null)return r}return null}
 function freshVal(f,maxH){const r=latest(f);return r&&NOW()-r.t<maxH*H?+r[f]:null}
 function currentOut(){const g=gravityQ(S.gate,freshVal("sump",6),freshVal("canal",6));const p=pumpQ(S);return{pump:p,grav:g,total:p+g}}
 function rainIntervals(){
-  const rs=R.filter(r=>num(r.rain)!=null).slice().sort((a,b)=>a.t-b.t);
+  const isTw=r=>/^thaiwater:/.test(r.src||""),csvT=R.filter(r=>num(r.rain)!=null&&!r.est&&!isTw(r)).map(r=>r.t);
+  // thaiwater and the BMA CSV are two copies of the same gauge; where both exist, keep the CSV (5-min, more exact)
+  const rs=R.filter(r=>num(r.rain)!=null&&!(isTw(r)&&csvT.some(t=>Math.abs(t-r.t)<=90*MIN))).slice().sort((a,b)=>a.t-b.t);
   const use=rs.filter(r=>r.t>=Date.now()-RANGE_H*H),out=[];
   for(let i=0;i<use.length;i++){const r=use[i],prev=use[i-1];
     if(!prev||r.t-prev.t>6*H){let mm=+r.rain;if(prev&&dayKey(prev.t)===dayKey(r.t))mm=Math.max(0,+r.rain-(+prev.rain));if(mm>0||!prev)out.push({t0:r.t-H,t1:r.t,mm,q:histQ(r.t-H/2),first:true});continue}
-    let mm=dayKey(prev.t)===dayKey(r.t)?+r.rain-(+prev.rain):+r.rain;if(mm<0)mm=+r.rain;
+    const same=dayKey(prev.t)===dayKey(r.t);let mm=same?+r.rain-(+prev.rain):+r.rain;if(mm<0)mm=same?0:+r.rain;
     out.push({t0:prev.t,t1:r.t,mm,q:histQ((prev.t+r.t)/2)})}
   return out;
 }
@@ -738,7 +740,8 @@ function drawStatus(){
     ["🌦","พยากรณ์ฝน 3 โมเดล (Open-Meteo)","auto","ทุก 15 นาที",om.length?Math.max(...om):null,45],
     ["🌊","ระดับแม่น้ำเจ้าพระยา CPY015","auto","ทุกชั่วโมง",last(r=>num(r.river)!=null),150],
     ["📈","ฝนย้อนหลังรายวัน (แบบจำลอง)","est","วันละครั้ง (เว้นวันที่มีฝนจริง)",last(r=>r.est&&num(r.rain)!=null&&/^(openmeteo|gh:)/.test(r.src||"")),4*24*60],
-    ["🌧","ฝนสถานีจริง กทม. (CSV)","man","อัปโหลดเมื่อฝนตก",last(r=>!r.est&&num(r.rain)!=null),null],
+    ["🌧","ฝนสถานี สนข.ทุ่งครุ (thaiwater)","auto","ทุกชั่วโมง ถ้า thaiwater มีค่าใหม่",last(r=>r.src==="thaiwater:RF.TKU.01"),150],
+    ["🌧","ฝนสถานีจริง กทม. (CSV)","man","อัปโหลดเมื่อฝนตก (แม่นสุด)",last(r=>!r.est&&num(r.rain)!=null&&!/^thaiwater:/.test(r.src||"")),null],
     ["🏞","ระดับคลองรางจาก WL.RJK.01 (CSV)","man","อัปโหลดเมื่อน้ำขึ้น",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),null],
     ["⚙️","สถานะปั๊ม · ประตูน้ำ","man","ทีมกดในห้องสั่งการ",num(S.updatedAt),null]];
   if(mode==="public")items.push(["🔄","ส่งข้อมูลจากห้องสั่งการมาเว็บนี้","auto","ทุกชั่วโมง",META&&num(META.warroomSyncAt),150]);
