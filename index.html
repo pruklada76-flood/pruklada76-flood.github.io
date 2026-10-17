@@ -7,19 +7,19 @@
 <style>
 /* Layout: control-room board, picture first. Hero = live water-system diagram + gauge + countdown; then charts, pumps, levels; text tucked in drawers. */
 :root{
-  --bg:#e9eef0; --panel:#ffffff; --ink:#0f1e26; --ink2:#46585f; --ink3:#71848b; --line:#d3dde0; --grid:#e3eaec;
-  --water:#1f6f9e; --water2:#5aa7d4; --water-soft:#d3e6f1; --rain:#4b5fc7; --rain-soft:#e0e4f8; --soil:#c9b99a; --soil2:#a8977a; --road:#7d8589; --house:#efe8dc; --roof:#b4521a; --sky:#f3f7f9; --metal:#5e6d73; --fc1:#6250d6; --fc2:#c2477a; --fc3:#13946a; --fc4:#8a6d00;
-  --ok:#1d7f4e; --ok-bg:#dcf1e4; --watch:#a07a00; --watch-bg:#fbf0c8; --warn:#c2581b; --warn-bg:#fbe2d2; --crit:#c0291f; --crit-bg:#f9d9d6;
+  --bg:#e9eef0; --panel:#ffffff; --ink:#0f1e26; --ink2:#46585f; --ink3:#5b6b72; --line:#d3dde0; --grid:#e3eaec;
+  --water:#1f6f9e; --water2:#5aa7d4; --water-soft:#d3e6f1; --rain:#4b5fc7; --rain-soft:#e0e4f8; --rain-ink:#34449e; --soil:#c9b99a; --soil2:#a8977a; --road:#7d8589; --house:#efe8dc; --roof:#b4521a; --sky:#f3f7f9; --metal:#5e6d73; --fc1:#6250d6; --fc2:#c2477a; --fc3:#13946a; --fc4:#8a6d00;
+  --ok:#186b41; --ok-bg:#dcf1e4; --watch:#7a5c00; --watch-bg:#fbf0c8; --warn:#a9480f; --warn-bg:#fbe2d2; --crit:#a8231a; --crit-bg:#f9d9d6;
   --display:"Chakra Petch","IBM Plex Sans Thai",system-ui,sans-serif;
   --body:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0c1518; --panel:#142126; --ink:#e7eff1; --ink2:#a9babf; --ink3:#7d9096; --line:#25373d; --grid:#1d2e33;
-  --water:#4fa3d6; --water2:#2f6f96; --water-soft:#183746; --rain:#8796ef; --rain-soft:#232a52; --soil:#4a4234; --soil2:#5d533f; --road:#5b6468; --house:#3a3a36; --roof:#c4683a; --sky:#13202a; --metal:#8a9ba1; --fc1:#9085e9; --fc2:#e87ba4; --fc3:#3cc493; --fc4:#d9b23a;
+  --bg:#0c1518; --panel:#142126; --ink:#e7eff1; --ink2:#a9babf; --ink3:#8fa2a8; --line:#25373d; --grid:#1d2e33;
+  --water:#4fa3d6; --water2:#2f6f96; --water-soft:#183746; --rain:#8796ef; --rain-soft:#232a52; --rain-ink:#8796ef; --soil:#4a4234; --soil2:#5d533f; --road:#5b6468; --house:#3a3a36; --roof:#c4683a; --sky:#13202a; --metal:#8a9ba1; --fc1:#9085e9; --fc2:#e87ba4; --fc3:#3cc493; --fc4:#d9b23a;
   --ok:#57c48b; --ok-bg:#163a28; --watch:#e3bf45; --watch-bg:#3a3214; --warn:#f08b52; --warn-bg:#40251a; --crit:#ff7a70; --crit-bg:#45201d; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0c1518; --panel:#142126; --ink:#e7eff1; --ink2:#a9babf; --ink3:#7d9096; --line:#25373d; --grid:#1d2e33;
-  --water:#4fa3d6; --water2:#2f6f96; --water-soft:#183746; --rain:#8796ef; --rain-soft:#232a52; --soil:#4a4234; --soil2:#5d533f; --road:#5b6468; --house:#3a3a36; --roof:#c4683a; --sky:#13202a; --metal:#8a9ba1; --fc1:#9085e9; --fc2:#e87ba4; --fc3:#3cc493; --fc4:#d9b23a;
+  --bg:#0c1518; --panel:#142126; --ink:#e7eff1; --ink2:#a9babf; --ink3:#8fa2a8; --line:#25373d; --grid:#1d2e33;
+  --water:#4fa3d6; --water2:#2f6f96; --water-soft:#183746; --rain:#8796ef; --rain-soft:#232a52; --rain-ink:#8796ef; --soil:#4a4234; --soil2:#5d533f; --road:#5b6468; --house:#3a3a36; --roof:#c4683a; --sky:#13202a; --metal:#8a9ba1; --fc1:#9085e9; --fc2:#e87ba4; --fc3:#3cc493; --fc4:#d9b23a;
   --ok:#57c48b; --ok-bg:#163a28; --watch:#e3bf45; --watch-bg:#3a3214; --warn:#f08b52; --warn-bg:#40251a; --crit:#ff7a70; --crit-bg:#45201d; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
@@ -29,7 +29,7 @@ h1,h2{font-family:var(--display);margin:0;letter-spacing:.01em;text-wrap:balance
 h1{font-size:1.45rem;font-weight:700}
 h2{font-size:.95rem;font-weight:600;color:var(--ink2)}
 .num{font-family:var(--display);font-variant-numeric:tabular-nums}
-.tiny{font-size:.76rem;color:var(--ink3)}
+.tiny{font-size:.8rem;color:var(--ink3)}
 .top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
 .top .r{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .pill{font-family:var(--display);font-weight:700;font-size:1.1rem;padding:4px 16px;border-radius:999px;color:var(--panel);white-space:nowrap;background:var(--ink3)}
@@ -59,7 +59,7 @@ svg .lblb{font-size:13px;font-weight:600;fill:var(--ink)}
 .col{display:flex;flex-direction:column;gap:14px;min-width:0}
 .chartbox{position:relative}
 .tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 9px;font-size:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.14);white-space:nowrap;z-index:2}
-.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.76rem;color:var(--ink2)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--ink2)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .sw{width:14px;height:4px;border-radius:2px;display:inline-block}
 .pumps{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
@@ -70,7 +70,7 @@ svg .lblb{font-size:13px;font-weight:600;fill:var(--ink)}
 .pump:disabled{cursor:default}
 .pump .nm{font-weight:600;font-size:.82rem;line-height:1.2}
 .pump .rt{font-family:var(--display);font-size:.8rem;color:var(--ink2);font-variant-numeric:tabular-nums}
-.pump .st{font-size:.72rem;font-weight:600;padding:0 8px;border-radius:999px;background:var(--grid);color:var(--ink2)}
+.pump .st{font-size:.8rem;font-weight:600;padding:0 8px;border-radius:999px;background:var(--grid);color:var(--ink2)}
 .pump[data-s="run"] .st{background:var(--water);color:var(--panel)}
 .pump[data-s="down"] .st{background:var(--crit);color:var(--panel)}
 .spin{transform-box:fill-box;transform-origin:center;animation:spin 1.1s linear infinite}
@@ -81,7 +81,7 @@ svg .lblb{font-size:13px;font-weight:600;fill:var(--ink)}
 @keyframes flow{to{stroke-dashoffset:-12}}
 .heat{display:grid;gap:4px}
 .heat .c{border-radius:6px;padding:7px 2px;text-align:center;font-family:var(--display);font-weight:600;font-size:.85rem;font-variant-numeric:tabular-nums}
-.heat .h{font-size:.72rem;color:var(--ink3);text-align:center;align-self:end}
+.heat .h{font-size:.8rem;color:var(--ink3);text-align:center;align-self:end}
 .heat .rh{font-size:.76rem;color:var(--ink2);align-self:center;padding-right:4px}
 .c.ok{background:var(--ok-bg);color:var(--ok)} .c.watch{background:var(--watch-bg);color:var(--watch)} .c.warn{background:var(--warn-bg);color:var(--warn)} .c.crit{background:var(--crit-bg);color:var(--crit)}
 .modebox{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
@@ -117,11 +117,11 @@ a{color:var(--water)}
 .tbl{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.82rem}
 th,td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--grid);white-space:nowrap}
-th{font-weight:600;color:var(--ink2);font-size:.74rem}
+th{font-weight:600;color:var(--ink2);font-size:.8rem}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-.chip{display:inline-block;font-size:.7rem;padding:0 7px;border-radius:999px;font-weight:600;background:var(--grid);color:var(--ink2)}
+.chip{display:inline-block;font-size:.8rem;padding:0 7px;border-radius:999px;font-weight:600;background:var(--grid);color:var(--ink2)}
 .params{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.del{font:inherit;font-size:.72rem;padding:1px 8px;border-radius:5px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer}
+.del{font:inherit;font-size:.8rem;padding:1px 8px;border-radius:5px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--panel);padding:8px 16px;border-radius:8px;font-size:.9rem;z-index:5}
 @media (max-width:1000px){.hero,.grid2{grid-template-columns:minmax(0,1fr)}.side{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.drawers{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:560px){.side{grid-template-columns:minmax(0,1fr)}.kpi .v{font-size:1.3rem}.kpi .ic{width:36px;height:36px}h1{font-size:1.2rem}}
@@ -140,22 +140,23 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .live .ld{width:9px;height:9px;border-radius:50%;background:currentColor}
 .live.on .ld{animation:blink 1.4s ease-in-out infinite}
 @keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.live.on .ld,.spin,.drop,.flow{animation:none}}
 #tlEmpty{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.78rem;color:var(--ink3);pointer-events:none;text-align:center}
 #tlEmpty[hidden]{display:none}
-.dstat{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
-.ds{display:flex;gap:9px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-width:0}
+.dstat{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0 24px}
+.ds{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--grid);min-width:0}
 .ds .ic{font-size:1.25rem;line-height:1;flex:0 0 auto}
 .ds .tx{min-width:0;flex:1}
 .ds .nm{font-size:.84rem;font-weight:600;line-height:1.25}
-.ds .mt{font-size:.74rem;color:var(--ink3);line-height:1.3}
-.bdg{display:inline-block;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:999px;margin-right:4px;vertical-align:1px}
-.bdg.auto{background:var(--ok-bg);color:var(--ok)}.bdg.man{background:var(--watch-bg);color:var(--watch)}.bdg.est{background:var(--rain-soft);color:var(--rain)}.bdg.none{background:var(--grid);color:var(--ink3)}
+.ds .mt{font-size:.8rem;color:var(--ink3);line-height:1.3}
+.bdg{display:inline-block;font-size:.8rem;font-weight:700;padding:1px 7px;border-radius:999px;margin-right:4px;vertical-align:1px}
+.bdg.auto{background:var(--ok-bg);color:var(--ok)}.bdg.man{background:var(--watch-bg);color:var(--watch)}.bdg.est{background:var(--rain-soft);color:var(--rain-ink)}.bdg.none{background:var(--grid);color:var(--ink3)}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:0}
 .dot.ok{background:var(--ok)}.dot.old{background:var(--warn)}.dot.no{background:var(--ink3)}
 .rng{flex-wrap:wrap;max-width:100%}
 .rng button{padding:4px 10px;font-size:.8rem;white-space:nowrap;flex:1 0 auto}
 .tlfoot{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
-.tllab{display:flex;justify-content:space-between;gap:8px;font-size:.76rem;color:var(--ink3);font-variant-numeric:tabular-nums}
+.tllab{display:flex;justify-content:space-between;gap:8px;font-size:.8rem;color:var(--ink3);font-variant-numeric:tabular-nums}
 .tllab b{color:var(--ink);font-family:var(--display);font-size:.9rem}
 .hist .card:not(.tl){outline:2px dashed var(--watch);outline-offset:-2px}
 .cap{font-size:.8rem;color:var(--ink2);margin:0;line-height:1.45}
@@ -165,7 +166,7 @@ details.info>summary::-webkit-details-marker{display:none}
 details.info>summary::before{content:"i";display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;font-size:.7rem;font-style:italic;font-family:Georgia,serif}
 details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:column;gap:3px}
 @media (prefers-reduced-motion:reduce){.live.on .ld{animation:none}}
-@media (max-width:640px){#scheme svg{min-width:640px}}
+@media (max-width:640px){#scheme svg .lbl,#scheme svg text{font-size:18px}#scheme svg .lblb{font-size:19px}}
 @media (prefers-reduced-motion:reduce){.spin,.drop,.flow{animation:none}}
 </style>
 
@@ -199,15 +200,6 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     </ul></details>
     <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="1">1 ชม.</button><button type="button" data-h="3">3 ชม.</button><button type="button" data-h="6">6 ชม.</button><button type="button" data-h="24">24 ชม.</button><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button></span>
     </div>
-  </section>
-
-  <section class="card" aria-label="สถานะข้อมูล">
-    <div class="row" style="justify-content:space-between"><h2>สถานะข้อมูล</h2><span class="legend"><span><span class="bdg auto">อัตโนมัติ</span></span><span><span class="bdg man">อัปโหลด/กรอกเอง</span></span><span><span class="bdg est">ค่าประมาณ</span></span><span><span class="bdg none">ยังไม่มี</span></span></span></div>
-    <div class="dstat" id="dstat"></div>
-    <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
-      <li>จุดเขียว = ได้ข้อมูลใหม่ตามรอบ · จุดส้ม = ช้ากว่ารอบ (อาจดึงไม่สำเร็จหรือยังไม่มีใครอัปโหลด) · เวลาที่แสดงคือข้อมูลล่าสุดที่หน้านี้มี</li>
-      <li>เว็บ กทม. (weather.bangkok.go.th) กันการดึงอัตโนมัติ ฝนสถานีและระดับคลองจึงต้องดาวน์โหลด CSV มาอัปโหลดเอง</li>
-    </ul></details>
   </section>
 
   <div id="simBar" style="display:none;position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:60;max-width:760px;margin:0 auto;box-shadow:0 6px 24px rgba(0,0,0,.25);gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;background:var(--panel);color:var(--ink);border:2px dashed var(--fc4);font-size:15px"><span><b>โหมดจำลอง</b> · ตัวเลขบนจอนี้เปลี่ยนตามที่คุณกด ไม่ใช่สถานะจริงของปั๊มและประตูน้ำ</span><button type="button" id="simReset" style="flex:none;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer">กลับค่าจริง</button></div>
@@ -350,6 +342,15 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       </section>
     </div>
   </div>
+
+  <section class="card" aria-label="สถานะข้อมูล">
+    <div class="row" style="justify-content:space-between"><h2>สถานะข้อมูล</h2><span class="legend"><span><span class="bdg auto">อัตโนมัติ</span></span><span><span class="bdg man">อัปโหลด/กรอกเอง</span></span><span><span class="bdg est">ค่าประมาณ</span></span><span><span class="bdg none">ยังไม่มี</span></span></span></div>
+    <div class="dstat" id="dstat"></div>
+    <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
+      <li>จุดเขียว = ได้ข้อมูลใหม่ตามรอบ · จุดส้ม = ช้ากว่ารอบ (อาจดึงไม่สำเร็จหรือยังไม่มีใครอัปโหลด) · เวลาที่แสดงคือข้อมูลล่าสุดที่หน้านี้มี</li>
+      <li>เว็บ กทม. (weather.bangkok.go.th) กันการดึงอัตโนมัติ ฝนสถานีและระดับคลองจึงต้องดาวน์โหลด CSV มาอัปโหลดเอง</li>
+    </ul></details>
+  </section>
 
   <div class="drawers">
     <details class="drawer" hidden>
@@ -699,7 +700,7 @@ function drawScheme(sim,out,md,road,ci){
   else s+=`<text x="${(cx0+cx1)/2}" y="${(cTop+cBot)/2}" text-anchor="middle" class="lbl">ยังไม่มีค่า</text>`;
   if(wl!=null){for(const [v,c] of [[th.warnIn,"var(--warn)"],[th.critIn,"var(--crit)"]]){const y=wY(v);s+=`<line x1="${cx0}" x2="${cx1}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.5" stroke-dasharray="4 3"/>`}
     s+=`<text x="${(cx0+cx1)/2}" y="${cTop-8}" text-anchor="middle" class="lblb" style="fill:${wl>=th.critIn?"var(--crit)":wl>=th.warnIn?"var(--warn)":"var(--ink)"}">${wl.toFixed(2)} ม.รทก.</text>`;
-    s+=`<text x="${(cx0+cx1)/2}" y="${Hh-10}" text-anchor="middle" class="lblb">คลองรางจาก${wlR&&NOW()-wlR.t>H?" ("+hm(wlR.t)+")":""}</text>`}
+    s+=`<text x="${(cx0+cx1)/2}" y="${Hh-10}" text-anchor="middle" class="lblb">${innerWidth<640?"คลอง":"คลองรางจาก"+(wlR&&NOW()-wlR.t>H?" ("+hm(wlR.t)+")":"")}</text>`}
   else{const ccy=cY(P.thrCanalCrit);s+=`<line x1="${cx0}" x2="${cx1}" y1="${ccy}" y2="${ccy}" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
   s+=`<text x="${(cx0+cx1)/2}" y="${Hh-10}" text-anchor="middle" class="lblb">คลอง${md.cv!=null?" "+fmt(md.cv)+" ซม.":""}</text>`}
   $("scheme").innerHTML=s+`</svg>`;
@@ -718,7 +719,7 @@ function drawPipes(){
   s+=`<circle cx="${mx0-8}" cy="${my}" r="9" fill="var(--panel)" stroke="var(--water)" stroke-width="3"/>`;
   s+=`<text x="${mx0+4}" y="18" class="lblb">ท่อในซอย ${nS} แนว · Ø${fmt(P.soiD*100)} ซม. · ยาว ${fmt(P.soiL)} ม.</text>`;
   s+=`<text x="${(mx0+mx1)/2}" y="${my+4}" text-anchor="middle" class="lbl" style="fill:var(--panel)">ท่อเมน ${fmt(P.mainN)} แนว · Ø${fmt(P.mainD,1)} ม. · ${fmt(P.mainL)} ม.</text>`;
-  s+=`<text x="${mx0-8}" y="${my+4}" text-anchor="middle" class="lbl" style="font-size:9px">ปั๊ม</text>`;
+  s+=`<text x="${mx0-8}" y="${my+4}" text-anchor="middle" class="lbl" style="font-size:11px">ปั๊ม</text>`;
   const by=196,bw=W-20,tot=Math.max(v.pipes+P.sumpVol,1),wS=bw*v.soi/tot,wM=bw*v.main/tot;
   s+=`<rect x="10" y="${by}" width="${wM.toFixed(1)}" height="18" fill="var(--water)"/><rect x="${(10+wM).toFixed(1)}" y="${by}" width="${wS.toFixed(1)}" height="18" fill="var(--water)" opacity=".55"/>`;
   if(P.sumpVol>0)s+=`<rect x="${(10+wM+wS).toFixed(1)}" y="${by}" width="${(bw-wM-wS).toFixed(1)}" height="18" fill="var(--water2)"/>`;
