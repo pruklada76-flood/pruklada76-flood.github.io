@@ -144,6 +144,9 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){.live.on .ld,.spin,.drop,.flow{animation:none}}
 #tlEmpty{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.78rem;color:var(--ink3);pointer-events:none;text-align:center}
 #tlEmpty[hidden]{display:none}
+.push{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.push[hidden]{display:none}
+.push .mt{color:var(--ink3);font-size:.85rem;flex:1 1 220px}
 .dstat{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0 24px}
 .ds{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--grid);min-width:0}
 .ds .ic{font-size:1.25rem;line-height:1;flex:0 0 auto}
@@ -346,6 +349,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
 
   <section class="card" aria-label="สถานะข้อมูล">
     <div class="row" style="justify-content:space-between"><h2>สถานะข้อมูล</h2><span class="legend"><span><span class="bdg auto">อัตโนมัติ</span></span><span><span class="bdg man">อัปโหลด/กรอกเอง</span></span><span><span class="bdg est">ค่าประมาณ</span></span><span><span class="bdg none">ยังไม่มี</span></span></span></div>
+    <div class="push" id="pushBox" hidden><button type="button" class="btn primary" id="pushGo">🔄 ส่งข้อมูลไปเว็บสาธารณะตอนนี้</button><span class="mt" id="pushMsg" aria-live="polite">ปกติส่งเองทุกชั่วโมง (นาทีที่ 43) · กดเมื่ออยากให้เว็บ pruklada76-flood.github.io เห็นค่าใหม่ทันที (ไม่ส่งบันทึกทีม)</span></div>
     <div class="dstat" id="dstat"></div>
     <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
       <li>จุดเขียว = ได้ข้อมูลใหม่ตามรอบ · จุดส้ม = ช้ากว่ารอบ (อาจดึงไม่สำเร็จหรือยังไม่มีใครอัปโหลด) · เวลาที่แสดงคือข้อมูลล่าสุดที่หน้านี้มี</li>
@@ -737,6 +741,7 @@ function drawPipes(){
 function ago(t){if(t==null)return "ยังไม่มีข้อมูล";const m=Math.max(0,Math.round((Date.now()-t)/MIN));return m<1?"เมื่อสักครู่":m<60?m+" นาทีก่อน":m<48*60?Math.round(m/60)+" ชม.ก่อน":Math.round(m/1440)+" วันก่อน"}
 function drawStatus(){
   const el=$("dstat");if(!el)return;
+  const pb=$("pushBox");if(pb)pb.hidden=!(mode==="db"&&canWrite);
   const last=f=>{let t=null;for(const r of R)if(f(r)&&(t==null||r.t>t))t=r.t;return t};
   const om=FC.filter(f=>/open-?meteo/i.test(f.id+" "+(f.label||""))).map(f=>num(f.issuedAt)).filter(v=>v!=null);
   const items=[
