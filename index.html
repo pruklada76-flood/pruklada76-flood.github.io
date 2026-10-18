@@ -159,6 +159,10 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .dot.ok{background:var(--ok)}.dot.old{background:var(--warn)}.dot.no{background:var(--ink3)}
 .rng{flex-wrap:wrap;max-width:100%}
 .rng button{padding:4px 10px;font-size:.8rem;white-space:nowrap;flex:1 0 auto}
+.tlpick{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:8px 0 2px;font-size:.85rem;color:var(--ink3)}
+.tlpick input{width:auto;flex:0 1 230px;margin:0;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;height:40px;padding:0 8px;min-width:0;max-width:100%}
+.tlpick .tlbtn{height:40px}
+.tlpick #tlAtMsg{flex:1 1 100%}
 .tlfoot{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
 .tllab{display:flex;justify-content:space-between;gap:8px;font-size:.8rem;color:var(--ink3);font-variant-numeric:tabular-nums}
 .tllab b{color:var(--ink);font-family:var(--display);font-size:.9rem}
@@ -193,6 +197,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <div class="tltrack"><div id="tlStrip"></div><div id="tlEmpty" hidden>ยังไม่มีข้อมูลช่วงนี้</div><input id="tlRange" type="range" min="0" max="1" step="60000" value="1" aria-label="เลือกเวลาที่ต้องการดู"></div>
       <button type="button" class="tlbtn live on" id="tlLive" aria-pressed="true"><i class="ld"></i>LIVE</button>
     </div>
+    <div class="tlpick"><label for="tlAt">📅 เลือกวันเวลาย้อนหลัง</label><input id="tlAt" type="datetime-local" step="60"><button type="button" class="tlbtn" id="tlAtGo">ไปดู</button><span id="tlAtMsg" aria-live="polite">แถบเวลาจะจบที่เวลาที่เลือก ใช้ปุ่มช่วงเวลาด้านล่างเลือกว่าจะย้อนก่อนหน้านั้นนานแค่ไหน</span></div>
     <div class="tllab"><span id="tlStart">–</span><span id="tlCur"><b>ตอนนี้</b></span><span id="tlEnd">ตอนนี้</span></div>
     <div class="tlfoot">
     <details class="info"><summary>วิธีใช้แถบเวลา</summary><ul>
@@ -200,6 +205,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <li>ลากแถบเพื่อย้อนไปดูเวลาใดก็ได้ ภาพผัง เกจ กราฟ และตัวเลขทั้งหน้าจะแสดงสภาพ ณ เวลานั้น กรอบเส้นประสีเหลืองบอกว่ากำลังดูย้อนหลัง</li>
       <li>▶ เล่น = ไล่เวลาตั้งแต่ต้นจนถึงปัจจุบันแบบ timelapse · LIVE (สีแดง) = ดูสถานการณ์ปัจจุบันและอัปเดตเอง กดอีกครั้งเพื่อหยุดไว้ที่เวลานั้น</li>
       <li>สถานะปั๊มและประตูไม่ได้เก็บย้อนหลัง จึงแสดงสถานะปัจจุบันเสมอ ส่วนอัตราสูบในอดีตใช้ค่าที่บันทึกไว้ตอนกรอกข้อมูลแต่ละครั้ง</li>
+      <li>📅 เลือกวันเวลาย้อนหลัง = ย้ายปลายแถบเวลาไปยังเวลานั้น (ย้อนได้ถึง 90 วัน) แล้วลาก/เล่นดูช่วงก่อนหน้าได้เหมือนเดิม</li>
       <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ข้อมูลที่บันทึกเก็บไว้ถาวร ช่วง 30 วันแสดงได้สูงสุด 1,000 ครั้งล่าสุด</li>
     </ul></details>
     <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="1">1 ชม.</button><button type="button" data-h="3">3 ชม.</button><button type="button" data-h="6">6 ชม.</button><button type="button" data-h="24">24 ชม.</button><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button></span>
@@ -448,6 +454,7 @@ function projectHourly(V0,hourly,out,horizon=12){
 let VIEW_H=36;try{const v=+localStorage.getItem("wr_range");if([1,3,6,24,36,72,168,720].includes(v))VIEW_H=v}catch(e){}
 let RANGE_H=Math.max(36,VIEW_H);// data/simulation window; short views only zoom the display
 const NOW=()=>NOWV??Date.now();
+let ANCHOR=null;const WEND=()=>ANCHOR??Date.now();// end of the viewed window: now, or a past time the viewer picked
 const $=id=>document.getElementById(id);
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function num(v){return(v===null||v===undefined||v===""||isNaN(+v))?null:+v}
@@ -485,7 +492,7 @@ function rainRows(){const isTw=r=>/^thaiwater:/.test(r.src||""),csvT=R.filter(r=
   return R.filter(r=>num(r.rain)!=null&&!(isTw(r)&&csvT.some(t=>Math.abs(t-r.t)<=90*MIN)))}
 function rainIntervals(){
   const rs=rainRows().slice().sort((a,b)=>a.t-b.t);
-  const use=rs.filter(r=>r.t>=Date.now()-RANGE_H*H),out=[];
+  const e=WEND(),use=rs.filter(r=>r.t>=e-RANGE_H*H&&r.t<=e),out=[];
   for(let i=0;i<use.length;i++){const r=use[i],prev=use[i-1];
     if(!prev||r.t-prev.t>6*H){let mm=+r.rain;if(prev&&dayKey(prev.t)===dayKey(r.t))mm=Math.max(0,+r.rain-(+prev.rain));if(mm>0||!prev)out.push({t0:r.t-H,t1:r.t,mm,q:histQ(r.t-H/2),first:true});continue}
     const same=dayKey(prev.t)===dayKey(r.t);let mm=same?+r.rain-(+prev.rain):+r.rain;if(mm<0)mm=same?0:+r.rain;
@@ -493,7 +500,7 @@ function rainIntervals(){
   return out;
 }
 function simulate(){
-  const iv=rainIntervals(),now=Date.now(),pts=[];let V=0,peak=0,t;
+  const iv=rainIntervals(),now=WEND(),pts=[];let V=0,peak=0,t;
   if(!iv.length)return{pts,V:0,peak:0,iv,start:now-6*H};
   t=iv[0].t0;pts.push({t,V:0});
   let lastQ=iv[0].q;
@@ -547,7 +554,7 @@ const LV={ok:"ปกติ",watch:"เฝ้าระวัง",warn:"เตื�
 const LVC={ok:"var(--ok)",watch:"var(--watch)",warn:"var(--warn)",crit:"var(--crit)"};
 function vAt(pts,T){if(!pts.length)return 0;if(T<=pts[0].t)return 0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];if(T<=b.t){const f=(T-a.t)/Math.max(1,b.t-a.t);return a.V+(b.V-a.V)*f}}return pts[pts.length-1].V}
 function render(){
-  const live=viewT==null,simAll=simulate(),T=live?Date.now():Math.min(viewT,Date.now());
+  const live=viewT==null,simAll=simulate(),T=live?Date.now():Math.min(viewT,WEND());
   const RALL=R;
   if(!live){R=RALL.filter(r=>r.t<=T);NOWV=T}
   try{renderAt(simAll,T,live)}finally{R=RALL;NOWV=null}
@@ -782,7 +789,7 @@ function drawLevels(md,road){
 }
 
 function drawCharts(sim,pr,scI,scH,live){
-  const W=760,padL=46,padR=12,now=Date.now(),T=NOW();
+  const W=760,padL=46,padR=12,now=WEND(),T=NOW();
   const fut=Math.max(4,Math.min(10,(scH||0)+4))*(RANGE_H>72?2:1),t0=VIEW_H<36?now-VIEW_H*H:Math.min(sim.start,now-RANGE_H*H),t1=now+(VIEW_H<36?Math.min(fut,Math.max(0.5,VIEW_H/3)):fut)*H;
   const X=t=>padL+(t-t0)/(t1-t0)*(W-padL-padR);
   const sp=t1-t0,ticks=[],step=sp>20*24*H?5*24*H:sp>6*24*H?24*H:sp>50*H?12*H:sp>18*H?3*H:sp>9*H?2*H:sp>4*H?H:sp>2*H?30*MIN:15*MIN;
@@ -858,10 +865,10 @@ function drawCharts(sim,pr,scI,scH,live){
       $("chartRiver").innerHTML=s+`</svg>`;const l=rv[rv.length-1];$("riverNow").textContent=num(l.river).toFixed(2)+" ม. · "+dhm(l.t)}}
 }
 function drawTimeline(simAll,T,live){
-  const now=Date.now(),t0=now-VIEW_H*H,span=Math.max(H,now-t0);
+  const now=WEND(),t0=now-VIEW_H*H,span=Math.max(H,now-t0);
   const rg=$("tlRange");
   rg.min=String(t0);rg.max=String(now);if(!dragging)rg.value=String(live?now:T);
-  $("tlStart").textContent=dhm(t0);$("tlEnd").textContent="ตอนนี้ "+hm(now);
+  $("tlStart").textContent=dhm(t0);$("tlEnd").textContent=ANCHOR==null?"ตอนนี้ "+hm(now):"ถึง "+dhm(now);
   $("tlCur").innerHTML=live?"<b>LIVE · ตอนนี้</b>":"<b>"+dhm(T)+"</b>";
   const lb=$("tlLive");lb.classList.toggle("on",live);lb.setAttribute("aria-pressed",String(live));lb.lastChild.textContent=live?"LIVE":"กลับ LIVE";
   $("tlPlay").textContent=playTimer?"❚❚ หยุด":"▶ เล่น";
@@ -909,7 +916,8 @@ function lockForm(){$("entry").querySelectorAll("input,button").forEach(el=>el.d
 function useLocal(msg){FC=(LS.get("forecasts",[])||[]).map(cleanFC);mode="local";P=mergeParams(LS.get("params",null));S=mergeState(LS.get("state",null));R=LS.get("readings",[]).filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);$("storeTxt").textContent=msg;drawParams();render()}
 function subReadings(){
   if(!db)return;if(unsubR)unsubR();
-  unsubR=db.collection("readings").where("t",">=",Date.now()-(RANGE_H+2)*H).orderBy("t","desc").limit(1000).onSnapshot(snap=>{R=snap.docs.map(d=>Object.assign({id:d.id},d.data())).filter(r=>num(r.t)!=null);render()},e=>{if(e&&e.code==="revoked")useLocal("การเชื่อมต่อข้อมูลกลางถูกยกเลิก")});
+  let q=db.collection("readings").where("t",">=",WEND()-(RANGE_H+2)*H);if(ANCHOR!=null)q=q.where("t","<=",ANCHOR);
+  unsubR=q.orderBy("t","desc").limit(1000).onSnapshot(snap=>{R=snap.docs.map(d=>Object.assign({id:d.id},d.data())).filter(r=>num(r.t)!=null);render()},e=>{if(e&&e.code==="revoked")useLocal("การเชื่อมต่อข้อมูลกลางถูกยกเลิก")});
 }
 let pubFirst=true,SIM=false,REAL=null;const SIM_OK=true;
 function showSim(){const b=$("simBar");if(b)b.style.display=SIM?"flex":"none"}
@@ -945,20 +953,31 @@ $("entry").addEventListener("submit",e=>{e.preventDefault();if(!canWrite)return;
 $("log").addEventListener("click",e=>{const b=e.target.closest("button[data-del]");if(!b)return;if(b.dataset.confirm!=="1"){b.dataset.confirm="1";b.textContent="ยืนยัน";setTimeout(()=>{b.dataset.confirm="";b.textContent="ลบ"},3000);return}delReading(b.dataset.del)});
 $("pform").addEventListener("submit",e=>{e.preventDefault();if(!canWrite)return;for(const [k] of PLAB){const v=num($("pp_"+k).value);if(v!=null)P[k]=v}for(const p of P.pumps){const v=num($("pq_"+p.id).value);if(v!=null)p.lpm=Math.max(0,v)}withStorage(P);drawParams();saveParams()});
 $("pReset").addEventListener("click",()=>{if(!canWrite)return;P=clone(DEF);drawParams();saveParams()});
-$("rngSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-h]");if(!b)return;VIEW_H=+b.dataset.h;RANGE_H=Math.max(36,VIEW_H);try{localStorage.setItem("wr_range",String(VIEW_H))}catch(err){}stopPlay();viewT=null;if(mode==="db")subReadings();render()});
+$("rngSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-h]");if(!b)return;VIEW_H=+b.dataset.h;RANGE_H=Math.max(36,VIEW_H);try{localStorage.setItem("wr_range",String(VIEW_H))}catch(err){}stopPlay();viewT=ANCHOR;if(mode==="db")subReadings();render()});
 $("tlRange").addEventListener("pointerdown",()=>{dragging=true});
 window.addEventListener("pointerup",()=>{dragging=false});
-$("tlRange").addEventListener("input",()=>{stopPlay();const v=+$("tlRange").value;viewT=v>=Date.now()-2*MIN?null:v;render()});
-$("tlLive").addEventListener("click",()=>{stopPlay();viewT=viewT==null?Date.now()-MIN:null;render()});
+$("tlRange").addEventListener("input",()=>{stopPlay();const v=+$("tlRange").value;viewT=ANCHOR==null&&v>=Date.now()-2*MIN?null:v;render()});
+$("tlLive").addEventListener("click",()=>{stopPlay();if(viewT!=null&&ANCHOR!=null){setAnchor(null);return}viewT=viewT==null?Date.now()-MIN:null;render()});
+function setAnchor(t){ANCHOR=t;viewT=t;stopPlay();
+  $("tlAtMsg").textContent=t==null?"แถบเวลาจะจบที่เวลาที่เลือก ใช้ปุ่มช่วงเวลาด้านล่างเลือกว่าจะย้อนก่อนหน้านั้นนานแค่ไหน":"กำลังดูย้อนหลังถึง "+dhm(t)+" น. · กด “กลับ LIVE” เพื่อกลับมาตอนนี้";
+  if(t==null)$("tlAt").value="";
+  if(mode==="db")subReadings();render()}
+$("tlAtGo").addEventListener("click",()=>{const v=fromInput($("tlAt").value);
+  if(v==null){$("tlAtMsg").textContent="เลือกวันและเวลาก่อน แล้วกด “ไปดู”";return}
+  if(v>=Date.now()-2*MIN){setAnchor(null);return}
+  if(v<Date.now()-90*24*H){$("tlAtMsg").textContent="ย้อนได้ไม่เกิน 90 วัน";return}
+  setAnchor(v)});
+$("tlAt").addEventListener("keydown",e=>{if(e.key==="Enter")$("tlAtGo").click()});
 $("tlPlay").addEventListener("click",()=>{
   if(playTimer){stopPlay();render();return}
-  const t0=+$("tlRange").min,now=Date.now();
+  const t0=+$("tlRange").min,now=WEND();
   if(viewT==null||viewT>=now-5*MIN)viewT=t0;
   const stepMs=Math.max(5*MIN,(now-t0)/120);
-  playTimer=setInterval(()=>{viewT+=stepMs;if(viewT>=Date.now()){viewT=null;stopPlay()}render()},160);
+  playTimer=setInterval(()=>{viewT+=stepMs;if(viewT>=WEND()){viewT=ANCHOR;stopPlay()}render()},160);
   render();
 });
 $("eT").value=toInput(Date.now());
+{const a=$("tlAt");a.max=toInput(Date.now());a.min=toInput(Date.now()-90*24*H)}
 drawParams();render();connect();
 setInterval(()=>{if(!document.hidden)render()},30000);
 })();
