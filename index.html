@@ -705,12 +705,12 @@ function drawScheme(sim,out,md,road,ci){
   s+=`<path d="${dp}" fill="none" stroke="var(--metal)" stroke-width="9" stroke-linecap="round"/>`;
   if(run)s+=`<path d="${dp}" fill="none" stroke="var(--water2)" stroke-width="4" class="${reduce?"":"flow"}"/>`;
   s+=`<text x="${(px+cx0)/2+10}" y="${py-24}" text-anchor="middle" class="lblb">${run?"ปั๊ม 6\" สูบ "+fmt(out.pump)+" ลบ.ม./ชม.":"ปั๊ม 6\" ไม่เดิน"}</text>`;
-  s+=`<rect x="${sx+sw}" y="207" width="${cx0-sx-sw}" height="20" fill="var(--panel)" stroke="var(--metal)" stroke-width="2"/>`;
-  if(gateOpen&&out.grav>0)s+=`<rect x="${sx+sw}" y="211" width="${cx0-sx-sw}" height="12" fill="var(--water2)"/>`;
-  const gx=cx0-26,gy=gateOpen?175:203;// outlet sits 20 cm (15 px on the canal scale) above its first position
-  s+=`<rect x="${gx-4}" y="172" width="4" height="63" fill="var(--metal)"/><rect x="${gx+14}" y="172" width="4" height="63" fill="var(--metal)"/>`;
+  s+=`<rect x="${sx+sw}" y="229.5" width="${cx0-sx-sw}" height="20" fill="var(--panel)" stroke="var(--metal)" stroke-width="2"/>`;
+  if(gateOpen&&out.grav>0)s+=`<rect x="${sx+sw}" y="233.5" width="${cx0-sx-sw}" height="12" fill="var(--water2)"/>`;
+  const gx=cx0-26,gy=gateOpen?197.5:225.5;// outlet sits 10 cm (7.5 px on the canal scale) below its first position
+  s+=`<rect x="${gx-4}" y="194.5" width="4" height="63" fill="var(--metal)"/><rect x="${gx+14}" y="194.5" width="4" height="63" fill="var(--metal)"/>`;
   s+=`<rect x="${gx}" y="${gy}" width="14" height="30" fill="${gateOpen?"var(--ok)":"var(--crit)"}" rx="2"/>`;
-  s+=`<text x="${gx+18}" y="255" text-anchor="end" class="lblb">${"ประตู"}${gateOpen?"เปิด":"ปิด"}</text>`;
+  s+=`<text x="${gx+18}" y="277.5" text-anchor="end" class="lblb">${"ประตู"}${gateOpen?"เปิด":"ปิด"}</text>`;
   s+=`<path d="M${cx0} ${cTop} V${cBot} H${cx1} V${cTop}" fill="var(--panel)" stroke="var(--soil2)" stroke-width="3"/>`;
   if(canalLevel!=null)s+=`<rect x="${cx0+2}" y="${canalLevel.toFixed(1)}" width="${cx1-cx0-4}" height="${(cBot-canalLevel-1).toFixed(1)}" fill="url(#gw)"/>`;
   else s+=`<text x="${(cx0+cx1)/2}" y="${(cTop+cBot)/2}" text-anchor="middle" class="lbl">ยังไม่มีค่า</text>`;
