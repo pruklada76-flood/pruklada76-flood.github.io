@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -I scripts/strip_notes.py:*)",
+      "Bash(python3 -I scripts/sync_from_db.py:*)",
+      "Bash(grep:*)",
+      "Bash(git add data)",
+      "Bash(git commit -m \"data: sync from war room (button)\")",
+      "Bash(git fetch origin main)",
+      "Bash(git reset --hard origin/main)",
+      "Bash(git push origin main)",
+      "Bash(git push origin HEAD:main)"
+    ]
+  }
+}
