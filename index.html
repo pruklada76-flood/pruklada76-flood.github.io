@@ -203,11 +203,12 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     <details class="info"><summary>วิธีใช้แถบเวลา</summary><ul>
       <li>แถบสีฟ้าคือปริมาณน้ำค้างในระบบตลอดช่วงที่มีข้อมูล แท่งสีม่วงคือฝน เส้นแดงคือจุดที่น้ำเริ่มขึ้นถนน</li>
       <li>ลากแถบเพื่อย้อนไปดูเวลาใดก็ได้ ภาพผัง เกจ กราฟ และตัวเลขทั้งหน้าจะแสดงสภาพ ณ เวลานั้น กรอบเส้นประสีเหลืองบอกว่ากำลังดูย้อนหลัง</li>
-      <li>▶ เล่น = ไล่เวลาตั้งแต่ต้นจนถึงปัจจุบันแบบ timelapse · LIVE (สีแดง) = ดูสถานการณ์ปัจจุบันและอัปเดตเอง กดอีกครั้งเพื่อหยุดไว้ที่เวลานั้น</li>
+      <li>▶ เล่น = ไล่เวลาตั้งแต่ต้นจนถึงปัจจุบันแบบ timelapse · ปุ่ม ¼× ถึง 4× ปรับความเร็วได้ แม้กำลังเล่นอยู่ (ปกติ 1× ใช้ราว 20 วินาทีต่อหนึ่งแถบ) · LIVE (สีแดง) = ดูสถานการณ์ปัจจุบันและอัปเดตเอง กดอีกครั้งเพื่อหยุดไว้ที่เวลานั้น</li>
       <li>สถานะปั๊มและประตูไม่ได้เก็บย้อนหลัง จึงแสดงสถานะปัจจุบันเสมอ ส่วนอัตราสูบในอดีตใช้ค่าที่บันทึกไว้ตอนกรอกข้อมูลแต่ละครั้ง</li>
       <li>📅 เลือกวันเวลาย้อนหลัง = ย้ายปลายแถบเวลาไปยังเวลานั้น (ย้อนได้ถึง 90 วัน) แล้วลาก/เล่นดูช่วงก่อนหน้าได้เหมือนเดิม</li>
       <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ข้อมูลที่บันทึกเก็บไว้ถาวร ช่วง 30 วันแสดงได้สูงสุด 1,000 ครั้งล่าสุด</li>
     </ul></details>
+    <span class="seg rng" id="spdSeg" role="group" aria-label="ความเร็วตอนเล่น"><button type="button" data-s="0.25">ช้ามาก ¼×</button><button type="button" data-s="0.5">ช้า ½×</button><button type="button" data-s="1">ปกติ 1×</button><button type="button" data-s="2">เร็ว 2×</button><button type="button" data-s="4">เร็วมาก 4×</button></span>
     <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="1">1 ชม.</button><button type="button" data-h="3">3 ชม.</button><button type="button" data-h="6">6 ชม.</button><button type="button" data-h="24">24 ชม.</button><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button></span>
     </div>
   </section>
@@ -451,6 +452,7 @@ function projectHourly(V0,hourly,out,horizon=12){
     V=Math.max(0,V+(mmToM3(i)-out)*dt);maxV=Math.max(maxV,V);if(tFill==null&&V>=P.storage&&V0<P.storage)tFill=s*dt;if(s%2===0)pts.push({t,V})}
   return{pts,tFill,maxV,tot};
 }
+let SPEED=1;try{const v=+localStorage.getItem("wr_speed");if([0.25,0.5,1,2,4].includes(v))SPEED=v}catch(e){}
 let VIEW_H=36;try{const v=+localStorage.getItem("wr_range");if([1,3,6,24,36,72,168,720].includes(v))VIEW_H=v}catch(e){}
 let RANGE_H=Math.max(36,VIEW_H);// data/simulation window; short views only zoom the display
 const NOW=()=>NOWV??Date.now();
@@ -873,6 +875,7 @@ function drawTimeline(simAll,T,live){
   const lb=$("tlLive");lb.classList.toggle("on",live);lb.setAttribute("aria-pressed",String(live));lb.lastChild.textContent=live?"LIVE":"กลับ LIVE";
   $("tlPlay").textContent=playTimer?"❚❚ หยุด":"▶ เล่น";
   document.querySelectorAll("#rngSeg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.h===VIEW_H)));
+  document.querySelectorAll("#spdSeg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.s===SPEED)));
   const W=1000,Hh=48,X=t=>(t-t0)/span*W,vmax=Math.max(P.storage*1.15,...simAll.pts.map(p=>p.V),1),Y=v=>Hh-2-(v/vmax)*(Hh-6);
   let s=`<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" width="${W}" height="${Hh}" rx="6" fill="var(--grid)"/>`;
   const imax=Math.max(10,...simAll.iv.map(k=>k.mm/((k.t1-k.t0)/H)));
@@ -954,6 +957,7 @@ $("log").addEventListener("click",e=>{const b=e.target.closest("button[data-del]
 $("pform").addEventListener("submit",e=>{e.preventDefault();if(!canWrite)return;for(const [k] of PLAB){const v=num($("pp_"+k).value);if(v!=null)P[k]=v}for(const p of P.pumps){const v=num($("pq_"+p.id).value);if(v!=null)p.lpm=Math.max(0,v)}withStorage(P);drawParams();saveParams()});
 $("pReset").addEventListener("click",()=>{if(!canWrite)return;P=clone(DEF);drawParams();saveParams()});
 $("rngSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-h]");if(!b)return;VIEW_H=+b.dataset.h;RANGE_H=Math.max(36,VIEW_H);try{localStorage.setItem("wr_range",String(VIEW_H))}catch(err){}stopPlay();viewT=ANCHOR;if(mode==="db")subReadings();render()});
+$("spdSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-s]");if(!b)return;SPEED=+b.dataset.s;try{localStorage.setItem("wr_speed",String(SPEED))}catch(err){}render()});
 $("tlRange").addEventListener("pointerdown",()=>{dragging=true});
 window.addEventListener("pointerup",()=>{dragging=false});
 $("tlRange").addEventListener("input",()=>{stopPlay();const v=+$("tlRange").value;viewT=ANCHOR==null&&v>=Date.now()-2*MIN?null:v;render()});
@@ -973,7 +977,7 @@ $("tlPlay").addEventListener("click",()=>{
   const t0=+$("tlRange").min,now=WEND();
   if(viewT==null||viewT>=now-5*MIN)viewT=t0;
   const stepMs=Math.max(5*MIN,(now-t0)/120);
-  playTimer=setInterval(()=>{viewT+=stepMs;if(viewT>=WEND()){viewT=ANCHOR;stopPlay()}render()},160);
+  playTimer=setInterval(()=>{viewT+=stepMs*SPEED;if(viewT>=WEND()){viewT=ANCHOR;stopPlay()}render()},160);
   render();
 });
 $("eT").value=toInput(Date.now());
