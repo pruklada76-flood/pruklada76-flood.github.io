@@ -204,7 +204,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <li>แถบสีฟ้าคือปริมาณน้ำค้างในระบบตลอดช่วงที่มีข้อมูล แท่งสีม่วงคือฝน เส้นแดงคือจุดที่น้ำเริ่มขึ้นถนน</li>
       <li>ลากแถบเพื่อย้อนไปดูเวลาใดก็ได้ ภาพผัง เกจ กราฟ และตัวเลขทั้งหน้าจะแสดงสภาพ ณ เวลานั้น กรอบเส้นประสีเหลืองบอกว่ากำลังดูย้อนหลัง</li>
       <li>▶ เล่น = ไล่เวลาตั้งแต่ต้นจนถึงปัจจุบันแบบ timelapse · ปุ่ม ¼× ถึง 4× ปรับความเร็วได้ แม้กำลังเล่นอยู่ (ปกติ 1× ใช้ราว 20 วินาทีต่อหนึ่งแถบ) · LIVE (สีแดง) = ดูสถานการณ์ปัจจุบันและอัปเดตเอง กดอีกครั้งเพื่อหยุดไว้ที่เวลานั้น</li>
-      <li>สถานะปั๊มและประตูไม่ได้เก็บย้อนหลัง จึงแสดงสถานะปัจจุบันเสมอ ส่วนอัตราสูบในอดีตใช้ค่าที่บันทึกไว้ตอนกรอกข้อมูลแต่ละครั้ง</li>
+      <li>ตอนดูย้อนหลัง ปุ่มปั๊มและประตูน้ำจะแสดงสถานะ ณ เวลานั้น (นับตั้งแต่ 20 ต.ค. 2569 ที่เริ่มเก็บ) และกดไม่ได้ ต้องกลับ LIVE ก่อน ดูรายการทั้งหมดได้ที่ “บันทึกเปิดปิดปั๊มและประตูน้ำ” ด้านล่าง</li>
       <li>📅 เลือกวันเวลาย้อนหลัง = ย้ายปลายแถบเวลาไปยังเวลานั้น (ย้อนได้ถึง 90 วัน) แล้วลาก/เล่นดูช่วงก่อนหน้าได้เหมือนเดิม</li>
       <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ข้อมูลที่บันทึกเก็บไว้ถาวร ช่วง 30 วันแสดงได้สูงสุด 1,000 ครั้งล่าสุด</li>
     </ul></details>
@@ -400,6 +400,10 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       </div>
     </details>
     <details class="drawer">
+      <summary><span class="plus">⏻</span>บันทึกเปิดปิดปั๊มและประตูน้ำ</summary>
+      <div class="in"><div class="tbl"><table id="opLog"></table></div><p class="tiny">บันทึกเองทุกครั้งที่มีคนกดปุ่มปั๊มหรือประตูน้ำ (เก็บ 300 ครั้งล่าสุด) · เวลาคือเวลาที่กดในหน้านี้ ไม่ใช่เวลาที่เปิดปิดจริงหน้างาน</p></div>
+    </details>
+    <details class="drawer">
       <summary><span class="plus">≡</span>ประวัติค่าที่บันทึก</summary>
       <div class="in"><div class="tbl"><table id="log"></table></div></div>
     </details>
@@ -558,8 +562,10 @@ function vAt(pts,T){if(!pts.length)return 0;if(T<=pts[0].t)return 0;for(let i=1;
 function render(){
   const live=viewT==null,simAll=simulate(),T=live?Date.now():Math.min(viewT,WEND());
   const RALL=R;
-  if(!live){R=RALL.filter(r=>r.t<=T);NOWV=T}
-  try{renderAt(simAll,T,live)}finally{R=RALL;NOWV=null}
+  const keepP=S.pumps,keepG=S.gate,keepW=canWrite;
+  if(!live){R=RALL.filter(r=>r.t<=T);NOWV=T;const o=opsAt(T);if(o){S.pumps=o.p;S.gate=o.g||keepG}canWrite=false}
+  try{renderAt(simAll,T,live)}finally{R=RALL;NOWV=null;S.pumps=keepP;S.gate=keepG;canWrite=keepW}
+  drawOpLog();
   drawStatus();
   document.body.classList.toggle("hist",!live);
   drawTimeline(simAll,T,live);
@@ -891,6 +897,16 @@ function drawTimeline(simAll,T,live){
 }
 function stopPlay(){if(playTimer){clearInterval(playTimer);playTimer=null}}
 function niceMax(v){const e=Math.pow(10,Math.floor(Math.log10(v)));for(const m of [1,1.5,2,2.5,3,4,5,6,8,10])if(m*e>=v)return m*e;return 10*e}
+function drawOpLog(){
+  const el=$("opLog");if(!el)return;const h=(S.hist||[]).slice(),rows=[];
+  const LBp={run:"เดิน",stand:"หยุด/พร้อม",down:"เสีย"};
+  for(let i=h.length-1;i>=0;i--){const e=h[i],pr=h[i-1],ch=[];
+    if(e.p){for(const pp of P.pumps){const a=pr&&pr.p?pr.p[pp.id]||"stand":null,b=e.p[pp.id]||"stand";if(a!==b&&(a!=null||b!=="stand"))ch.push(`<b>${esc(SHORT[pp.id]||pp.name)}</b> ${LBp[b]}`)}
+      if(e.g&&(!pr||pr.g!==e.g))ch.push(`<b>ประตูน้ำ</b> ${e.g==="open"?"เปิด":"ปิด"}`)}
+    else if(!pr||pr.q!==e.q)ch.push("อัตราสูบรวมเปลี่ยน");
+    if(ch.length)rows.push(`<tr><td class="num">${dhm(e.t)}</td><td>${ch.join(" · ")}</td><td class="n">${fmt(e.q)}</td></tr>`)}
+  el.innerHTML=rows.length?`<tr><th>เวลาที่กด</th><th>เปลี่ยนอะไร</th><th class="n">สูบรวม ลบ.ม./ชม.</th></tr>`+rows.slice(0,100).join(""):`<tr><td class="tiny">ยังไม่มีการกดปุ่มปั๊มหรือประตูน้ำ</td></tr>`;
+}
 function drawLog(){
   if(!R.length){$("log").innerHTML=`<tr><td class="tiny">ยังไม่มีค่าที่บันทึก</td></tr>`;return}
   let h=`<tr><th>เวลา</th><th class="n">ฝน</th><th class="n">บ่อ</th><th class="n">คลอง</th><th class="n">ถนน</th><th class="n">สูบ</th><th></th><th></th></tr>`;
@@ -909,8 +925,13 @@ const LS={get(k,d){try{const v=localStorage.getItem("wr_"+k);return v?JSON.parse
 function pipeVols(o){const v=(d,l,n)=>Math.PI*(d/2)**2*l*n,main=v(o.mainD,o.mainL,o.mainN),soi=v(o.soiD,o.soiL,o.soiN),k=1-Math.min(95,Math.max(0,o.silt))/100;return{main,soi,pipes:main+soi,k,total:(main+soi)*k+Math.max(0,o.sumpVol)}}
 function withStorage(o){o.storage=Math.max(1,Math.round(pipeVols(o).total));return o}
 function mergeParams(x){const o=clone(DEF);if(!x)return withStorage(o);for(const [k] of PLAB)if(num(x[k])!=null)o[k]=+x[k];if(Array.isArray(x.pumps))for(const p of o.pumps){const q=x.pumps.find(z=>z.id===p.id);if(q){if(num(q.lpm)!=null)p.lpm=+q.lpm;if(q.name)p.name=String(q.name)}}return withStorage(o)}
-function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;o.updatedAt=num(x.updatedAt);o.hist=Array.isArray(x.hist)?x.hist.filter(e=>e&&num(e.t)!=null&&num(e.q)!=null).map(e=>({t:+e.t,q:+e.q})).sort((a,b)=>a.t-b.t).slice(-100):[];if(!o.hist.length&&o.updatedAt)o.hist=[{t:o.updatedAt,q:Math.round(pumpQ(o))}];return o}
-async function saveState(){if(mode==="public"){SIM=true;showSim();render();return}S.updatedAt=Date.now();S.hist=(S.hist||[]).concat({t:S.updatedAt,q:Math.round(pumpQ(S))}).slice(-100);if(mode==="db"){try{await db.doc("war/state").set(clone(S))}catch(e){fail(e)}}else LS.set("state",S);render()}
+function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;o.updatedAt=num(x.updatedAt);o.hist=Array.isArray(x.hist)?x.hist.filter(e=>e&&num(e.t)!=null&&num(e.q)!=null).map(e=>{const h={t:+e.t,q:+e.q};if(e.p&&typeof e.p==="object")h.p=Object.assign({},e.p);if(e.g==="open"||e.g==="closed")h.g=e.g;return h}).sort((a,b)=>a.t-b.t).slice(-HIST_N):[];if(!o.hist.length&&o.updatedAt)o.hist=[{t:o.updatedAt,q:Math.round(pumpQ(o)),p:Object.assign({},o.pumps),g:o.gate}];return o}
+const HIST_N=300;
+function snapOf(st){return{t:st.updatedAt,q:Math.round(pumpQ(st)),p:Object.assign({},st.pumps),g:st.gate}}
+function sameOps(a,b){if(!a||!b||!a.p||a.g!==b.g||a.q!==b.q)return false;const k=new Set([...Object.keys(a.p),...Object.keys(b.p)]);for(const i of k)if((a.p[i]||"stand")!==(b.p[i]||"stand"))return false;return true}
+// pumps and gate as they were at time t (from the press history); null when no snapshot covers t
+function opsAt(t){let e=null;for(const h of (S.hist||[])){if(h.t<=t)e=h;else break}return e&&e.p?e:null}
+async function saveState(){if(mode==="public"){SIM=true;showSim();render();return}S.updatedAt=Date.now();const sn=snapOf(S),h=S.hist||[];if(!sameOps(h[h.length-1],sn))S.hist=h.concat(sn).slice(-HIST_N);if(mode==="db"){try{await db.doc("war/state").set(clone(S))}catch(e){fail(e)}}else LS.set("state",S);render()}
 async function saveParams(){if(mode==="db"){try{await db.doc("war/params").set(clone(P));toast("บันทึกตัวเลขแล้ว")}catch(e){fail(e)}}else{LS.set("params",P);toast("บันทึกในเครื่องนี้แล้ว")}render()}
 async function addReading(r){if(mode==="db"){try{await db.collection("readings").add(r);toast("บันทึกแล้ว")}catch(e){fail(e)}}else{r.id="l"+Date.now();R.unshift(r);R.sort((a,b)=>b.t-a.t);LS.set("readings",R);toast("บันทึกในเครื่องนี้แล้ว");render()}}
 async function delReading(id){if(mode==="db"){try{await db.doc("readings/"+id).delete();toast("ลบแล้ว")}catch(e){fail(e)}}else{R=R.filter(r=>r.id!==id);LS.set("readings",R);render()}}
