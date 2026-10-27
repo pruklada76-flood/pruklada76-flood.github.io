@@ -360,7 +360,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     <div class="dstat" id="dstat"></div>
     <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
       <li>จุดเขียว = ได้ข้อมูลใหม่ตามรอบ · จุดส้ม = ช้ากว่ารอบ (อาจดึงไม่สำเร็จหรือยังไม่มีใครอัปโหลด) · เวลาที่แสดงคือข้อมูลล่าสุดที่หน้านี้มี</li>
-      <li>ฝนสถานี สนข.ทุ่งครุ ดึงอัตโนมัติจาก thaiwater.net ทุกชั่วโมง แต่ thaiwater อัปเดตค่าของ กทม. ไม่สม่ำเสมอ (จุดส้ม = ค่าค้าง) · เว็บ กทม. (weather.bangkok.go.th) กันการดึงอัตโนมัติ ไฟล์ CSV จึงยังเป็นตัวสำรองที่แม่นที่สุด และระดับคลองยังต้องอัปโหลด CSV เอง</li>
+      <li>ฝนสถานี สนข.ทุ่งครุ ดึงอัตโนมัติจาก thaiwater.net ทุกชั่วโมง แต่ thaiwater อัปเดตค่าของ กทม. ไม่สม่ำเสมอ (จุดส้ม = ค่าค้าง) · ระดับคลองรางจากอ่านจากเว็บ กทม. ทุกชั่วโมง (นาทีที่ 33) ถ้าเว็บปฏิเสธ ให้อัปโหลด CSV แทน · ฝนจากเว็บ กทม. ยังอ่านอัตโนมัติไม่ได้ เพราะหน้าเว็บยาวเกินและตัวเลขสะสมโหลดด้วยสคริปต์ CSV ฝนจึงยังเป็นตัวสำรองที่แม่นที่สุด</li>
     </ul></details>
   </section>
 
@@ -765,11 +765,10 @@ function drawStatus(){
     ["📈","ฝนย้อนหลังรายวัน (แบบจำลอง)","est","วันละครั้ง (เว้นวันที่มีฝนจริง)",last(r=>r.est&&num(r.rain)!=null&&/^(openmeteo|gh:)/.test(r.src||"")),4*24*60],
     ["🌧","ฝนสถานี สนข.ทุ่งครุ (thaiwater)","auto","ทุกชั่วโมง ถ้า thaiwater มีค่าใหม่",last(r=>r.src==="thaiwater:RF.TKU.01"),150],
     ["🌧","ฝนสถานีจริง กทม. (CSV)","man","อัปโหลดเมื่อฝนตก (แม่นสุด)",last(r=>!r.est&&num(r.rain)!=null&&!/^thaiwater:/.test(r.src||"")),null],
-    ["🏞","ระดับคลองรางจาก WL.RJK.01 (CSV)","man","อัปโหลดเมื่อน้ำขึ้น",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),null],
+    ["🏞","ระดับคลองรางจาก WL.RJK.01","auto","ทุกชั่วโมง จากเว็บ กทม. · CSV ใช้สำรอง",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),150],
     ["⚙️","สถานะปั๊ม · ประตูน้ำ","man","ทีมกดในห้องสั่งการ",num(S.updatedAt),null]];
   if(mode==="public")items.push(["🔄","ส่งข้อมูลจากห้องสั่งการมาเว็บนี้","auto","ทุกชั่วโมง",META&&num(META.warroomSyncAt),150]);
-  items.push(["📏","ไม้วัดบ่อซัมพ์","man","กรอกเอง (ยังไม่ติดไม้วัด)",last(r=>num(r.sump)!=null),null],
-    ["📡","ระดับคลองอัตโนมัติ","none","ยังทำไม่ได้: เว็บ กทม. กันการดึง",null,null]);
+  items.push(["📏","ไม้วัดบ่อซัมพ์","man","กรอกเอง (ยังไม่ติดไม้วัด)",last(r=>num(r.sump)!=null),null]);
   const LB={auto:"อัตโนมัติ",man:"เอง",est:"ประมาณ",none:"ยังไม่มี"};
   el.innerHTML=items.map(([ic,nm,k,fr,t,maxMin])=>{const d=t==null?"no":maxMin&&Date.now()-t>maxMin*MIN?"old":"ok";
     return `<div class="ds"><span class="ic" aria-hidden="true">${ic}</span><div class="tx"><div class="nm">${esc(nm)}</div><div class="mt"><span class="bdg ${k}">${LB[k]}</span>${esc(fr)}</div>${k==="none"?"":`<div class="mt"><span class="dot ${d}"></span>${t==null?"ยังไม่มีข้อมูล":esc(ago(t))+" · "+(Date.now()-t<20*H?hm(t)+" น.":dhm(t))}</div>`}</div></div>`}).join("");
@@ -935,7 +934,7 @@ async function saveState(){if(mode==="public"){SIM=true;showSim();render();retur
 async function saveParams(){if(mode==="db"){try{await db.doc("war/params").set(clone(P));toast("บันทึกตัวเลขแล้ว")}catch(e){fail(e)}}else{LS.set("params",P);toast("บันทึกในเครื่องนี้แล้ว")}render()}
 async function addReading(r){if(mode==="db"){try{await db.collection("readings").add(r);toast("บันทึกแล้ว")}catch(e){fail(e)}}else{r.id="l"+Date.now();R.unshift(r);R.sort((a,b)=>b.t-a.t);LS.set("readings",R);toast("บันทึกในเครื่องนี้แล้ว");render()}}
 async function delReading(id){if(mode==="db"){try{await db.doc("readings/"+id).delete();toast("ลบแล้ว")}catch(e){fail(e)}}else{R=R.filter(r=>r.id!==id);LS.set("readings",R);render()}}
-function fail(e){if(e&&e.code==="invalid_argument"){canWrite=false;$("storeTxt").textContent="ดูได้อย่างเดียว · ขอสิทธิ์ Contributor จากเจ้าของหน้า";render();drawParams();lockForm()}else if(e&&e.code==="quota_exceeded")toast("พื้นที่เก็บข้อมูลเต็ม");else toast("บันทึกไม่สำเร็จ ลองอีกครั้ง")}
+function fail(e){if(e&&e.code==="invalid_argument"){canWrite=false;$("storeTxt").textContent="ดูได้อย่างเดียว · ให้เจ้าของหน้าเชิญด้วยอีเมลแบบ Editor และปิดการแชร์ด้วยลิงก์";render();drawParams();lockForm()}else if(e&&e.code==="quota_exceeded")toast("พื้นที่เก็บข้อมูลเต็ม");else toast("บันทึกไม่สำเร็จ ลองอีกครั้ง")}
 function lockForm(){$("entry").querySelectorAll("input,button").forEach(el=>el.disabled=!canWrite);if(!canWrite){const g=$("snapGo"),n=$("snap"),c=$("csvBox");if(g)g.hidden=true;if(n)n.hidden=true;if(c)c.hidden=true}}
 function useLocal(msg){FC=(LS.get("forecasts",[])||[]).map(cleanFC);mode="local";P=mergeParams(LS.get("params",null));S=mergeState(LS.get("state",null));R=LS.get("readings",[]).filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);$("storeTxt").textContent=msg;drawParams();render()}
 function subReadings(){
