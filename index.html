@@ -225,10 +225,10 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <li>▶ เล่น = ไล่เวลาตั้งแต่ต้นจนถึงปัจจุบันแบบ timelapse · ปุ่ม ¼× ถึง 4× ปรับความเร็วได้ แม้กำลังเล่นอยู่ (ปกติ 1× ใช้ราว 20 วินาทีต่อหนึ่งแถบ) · LIVE (สีแดง) = ดูสถานการณ์ปัจจุบันและอัปเดตเอง กดอีกครั้งเพื่อหยุดไว้ที่เวลานั้น</li>
       <li>ตอนดูย้อนหลัง ปุ่มปั๊มและประตูน้ำจะแสดงสถานะ ณ เวลานั้น (นับตั้งแต่ 20 ต.ค. 2569 ที่เริ่มเก็บ) และกดไม่ได้ ต้องกลับ LIVE ก่อน ดูรายการทั้งหมดได้ที่ “บันทึกเปิดปิดปั๊มและประตูน้ำ” ด้านล่าง</li>
       <li>📅 เลือกวันเวลาย้อนหลัง = ย้ายปลายแถบเวลาไปยังเวลานั้น (ย้อนได้ถึง 4 เดือน) แล้วลาก/เล่นดูช่วงก่อนหน้าได้เหมือนเดิม</li>
-      <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ข้อมูลที่บันทึกเก็บไว้ถาวร ช่วง 30 วันแสดงได้สูงสุด 1,000 ครั้งล่าสุด</li>
+      <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ปุ่ม 2–4 เดือนใช้ดูภาพรวมย้อนหลัง ข้อมูลที่บันทึกเก็บไว้ถาวร</li>
     </ul></details>
     <span class="seg rng" id="spdSeg" role="group" aria-label="ความเร็วตอนเล่น"><button type="button" data-s="0.25">ช้ามาก ¼×</button><button type="button" data-s="0.5">ช้า ½×</button><button type="button" data-s="1">ปกติ 1×</button><button type="button" data-s="2">เร็ว 2×</button><button type="button" data-s="4">เร็วมาก 4×</button></span>
-    <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="1">1 ชม.</button><button type="button" data-h="3">3 ชม.</button><button type="button" data-h="6">6 ชม.</button><button type="button" data-h="24">24 ชม.</button><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button></span>
+    <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="1">1 ชม.</button><button type="button" data-h="3">3 ชม.</button><button type="button" data-h="6">6 ชม.</button><button type="button" data-h="24">24 ชม.</button><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button><button type="button" data-h="1440">2 เดือน</button><button type="button" data-h="2160">3 เดือน</button><button type="button" data-h="2880">4 เดือน</button></span>
     </div>
   </section>
 
@@ -461,7 +461,7 @@ function projectHourly(V0,hourly,out,horizon=12){
   return{pts,tFill,maxV,tot};
 }
 let SPEED=1;try{const v=+localStorage.getItem("wr_speed");if([0.25,0.5,1,2,4].includes(v))SPEED=v}catch(e){}
-let VIEW_H=36;try{const v=+localStorage.getItem("wr_range");if([1,3,6,24,36,72,168,720].includes(v))VIEW_H=v}catch(e){}
+let VIEW_H=36;try{const v=+localStorage.getItem("wr_range");if([1,3,6,24,36,72,168,720,1440,2160,2880].includes(v))VIEW_H=v}catch(e){}
 let RANGE_H=Math.max(36,VIEW_H);// data/simulation window; short views only zoom the display
 const NOW=()=>NOWV??Date.now();
 let ANCHOR=null;const WEND=()=>ANCHOR??Date.now();// end of the viewed window: now, or a past time the viewer picked
@@ -802,7 +802,7 @@ function drawCharts(sim,pr,scI,scH,live){
   const W=760,padL=46,padR=12,now=WEND(),T=NOW();
   const fut=Math.max(4,Math.min(10,(scH||0)+4))*(RANGE_H>72?2:1),t0=VIEW_H<36?now-VIEW_H*H:Math.min(sim.start,now-RANGE_H*H),t1=now+(VIEW_H<36?Math.min(fut,Math.max(0.5,VIEW_H/3)):fut)*H;
   const X=t=>padL+(t-t0)/(t1-t0)*(W-padL-padR);
-  const sp=t1-t0,ticks=[],step=sp>20*24*H?5*24*H:sp>6*24*H?24*H:sp>50*H?12*H:sp>18*H?3*H:sp>9*H?2*H:sp>4*H?H:sp>2*H?30*MIN:15*MIN;
+  const sp=t1-t0,ticks=[],step=sp>50*24*H?14*24*H:sp>20*24*H?5*24*H:sp>6*24*H?24*H:sp>50*H?12*H:sp>18*H?3*H:sp>9*H?2*H:sp>4*H?H:sp>2*H?30*MIN:15*MIN;
   for(let t=Math.ceil((t0+TZ)/step)*step-TZ;t<=t1;t+=step)ticks.push(t);
   const tl=t=>{if(step<12*H)return hm(t);const d=bkk(t);return d.getUTCDate()+" "+TH_M[d.getUTCMonth()]+(step===12*H?" "+hm(t):"")};
   {const Hh=210,top=12,bot=24,nice=niceMax(Math.max(P.storage*1.25,sim.peak*1.1,...pr.pts.map(p=>p.V),...FCP.map(x=>x.maxV))||1),Y=v=>top+(1-v/nice)*(Hh-top-bot);
@@ -942,8 +942,14 @@ function lockForm(){$("entry").querySelectorAll("input,button").forEach(el=>el.d
 function useLocal(msg){FC=(LS.get("forecasts",[])||[]).map(cleanFC);mode="local";P=mergeParams(LS.get("params",null));S=mergeState(LS.get("state",null));R=LS.get("readings",[]).filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);$("storeTxt").textContent=msg;drawParams();render()}
 function subReadings(){
   if(!db)return;if(unsubR)unsubR();
-  let q=db.collection("readings").where("t",">=",WEND()-(RANGE_H+2)*H);if(ANCHOR!=null)q=q.where("t","<=",ANCHOR);
-  unsubR=q.orderBy("t","desc").limit(1000).onSnapshot(snap=>{R=snap.docs.map(d=>Object.assign({id:d.id},d.data())).filter(r=>num(r.t)!=null);render()},e=>{if(e&&e.code==="revoked")useLocal("การเชื่อมต่อข้อมูลกลางถูกยกเลิก")});
+  // One query returns at most 1,000 rows, so long ranges are read in 10-day slices and merged.
+  const end=ANCHOR,start=WEND()-(RANGE_H+2)*H,SL=10*24*H,parts=[],unsubs=[];
+  for(let a=start,i=0;a<WEND();a+=SL,i++){
+    let q=db.collection("readings").where("t",">=",a);const b=a+SL;
+    if(b<WEND())q=q.where("t","<",b);else if(end!=null)q=q.where("t","<=",end);
+    unsubs.push(q.orderBy("t","desc").limit(1000).onSnapshot(snap=>{parts[i]=snap.docs.map(d=>Object.assign({id:d.id},d.data())).filter(r=>num(r.t)!=null);
+      const seen=new Set();R=parts.flat().filter(r=>r&&!seen.has(r.id)&&seen.add(r.id)).sort((x,y)=>y.t-x.t);render()},e=>{if(e&&e.code==="revoked")useLocal("การเชื่อมต่อข้อมูลกลางถูกยกเลิก")}))}
+  unsubR=()=>unsubs.forEach(u=>u());
 }
 let pubFirst=true,SIM=false,REAL=null;const SIM_OK=true;
 function showSim(){const b=$("simBar");if(b)b.style.display=SIM?"flex":"none"}
