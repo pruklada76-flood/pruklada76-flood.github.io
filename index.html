@@ -292,11 +292,11 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
         </div>
         <div class="legend" id="fcLegend"></div>
         <div class="chartbox" id="chartV"></div>
-        <h2>ความแรงฝน (มม./ชม.)</h2>
+        <h2 id="chartRT">ความแรงฝน (มม./ชม.)</h2>
         <div class="chartbox" id="chartR"></div>
         <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
           <li>กราฟบน: เส้นทึบคือค่าที่คำนวณจากฝนที่บันทึกจริง เส้นประคือคาดการณ์ถ้าฝนตกตามค่า "ฝนคาดการณ์" จุดแดงคือเวลาที่คาดว่าน้ำจะขึ้นถนน ชี้เมาส์หรือแตะที่กราฟเพื่อดูค่า</li>
-          <li>กราฟล่าง: แต่ละแท่งคือความแรงฝนเฉลี่ยระหว่าง 2 ครั้งที่บันทึก แท่งจางคือฝนคาดการณ์ เส้นประฟ้าคือฝนที่ปั๊มรับไหว ถ้าแท่งสูงกว่าเส้นนี้ น้ำจะสะสม</li>
+          <li>กราฟล่าง: ถ้าดูช่วงยาวกว่า 7 วัน จะเปลี่ยนเป็นฝนรวมรายวัน (มม.) และติดตัวเลขวันที่ฝนมากที่สุด 8 วัน ถ้าดูช่วงสั้น แต่ละแท่งคือความแรงฝนเฉลี่ยระหว่าง 2 ครั้งที่บันทึก แท่งจางคือฝนคาดการณ์ เส้นประฟ้าคือฝนที่ปั๊มรับไหว ถ้าแท่งสูงกว่าเส้นนี้ น้ำจะสะสม</li>
           <li><b>เส้นพยากรณ์สี</b> (ม่วง ชมพู เขียว เหลืองเข้ม): แต่ละเส้นคือฝนรายชั่วโมงจากแหล่งพยากรณ์หนึ่งแหล่ง เช่น Open-Meteo หรือกรมอุตุฯ นำมาคำนวณน้ำค้างแบบเดียวกัน ชื่อแหล่งและเวลาที่ดึงข้อมูลอยู่ใต้หัวกราฟ ถ้าข้อมูลเก่ากว่า 6 ชม. เส้นจะจาง ในกราฟล่าง เส้นขั้นบันไดสีเดียวกันคือฝนพยากรณ์ของแหล่งนั้น</li>
           <li>ถ้าหลายแหล่งให้ผลต่างกันมาก แปลว่าพยากรณ์ยังไม่แน่นอน ให้วางแผนตามเส้นที่แย่ที่สุด</li>
           <li>ค่าที่ติดป้าย "ประมาณ" ในประวัติ (ก่อน 21:10 วันที่ 14 ต.ค.) อ่านจากกราฟในภาพหน้าจอสถานี ไม่ใช่ตัวเลขจริงจากสถานี</li>
@@ -475,6 +475,7 @@ function hm(ms){const d=bkk(ms);return String(d.getUTCHours()).padStart(2,"0")+"
 const TH_M=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
 const riverOnly=r=>num(r.rain)==null&&num(r.sump)==null&&num(r.canal)==null&&num(r.road)==null&&(num(r.river)!=null||num(r.wlIn)!=null||num(r.wlOut)!=null),LR=()=>R.find(r=>!riverOnly(r));
 const WL_DEF={warnIn:.55,critIn:.6,warnOut:1,critOut:1.2};function wlThr(){const r=R.find(x=>num(x.critIn)!=null);const o={...WL_DEF};if(r)for(const k in o)if(num(r[k])!=null)o[k]=+r[k];return o}
+function dayS(ms){const d=bkk(ms);return d.getUTCDate()+" "+TH_M[d.getUTCMonth()]}
 function dhm(ms){const d=bkk(ms);return d.getUTCDate()+" "+TH_M[d.getUTCMonth()]+" "+hm(ms)}
 function dayKey(ms){return bkk(ms).toISOString().slice(0,10)}
 function toInput(ms){return bkk(ms).toISOString().slice(0,16)}
@@ -833,18 +834,24 @@ function drawCharts(sim,pr,scI,scH,live){
       tip.style.left=Math.min(r.width-tip.offsetWidth,Math.max(0,X(best.t)/W*r.width+10))+"px";tip.style.top="6px"});
     svg.addEventListener("pointerleave",()=>{$("tip").hidden=true;$("cross").setAttribute("visibility","hidden")});
   }
-  {const Hh=100,top=8,bot=22,iv=sim.iv.map(k=>({t0:k.t0,t1:k.t1,i:k.mm/((k.t1-k.t0)/H)})),fut=live&&scI&&scH?[{t0:now,t1:now+scH*H,i:scI,f:1}]:[];
+  {const daily=sp>7*24*H,Hh=daily?120:100,top=daily?20:16,bot=22,fut=live&&scI&&scH?[{t0:now,t1:now+scH*H,i:scI,f:1}]:[];
+    // Long views: one bar per day (rain total in mm); short views: intensity per logged interval (mm/h).
+    let iv=sim.iv.map(k=>({t0:k.t0,t1:k.t1,i:k.mm/((k.t1-k.t0)/H)}));
+    if(daily){const m=new Map();for(const k of sim.iv){const d0=Math.floor((k.t1+TZ)/(24*H))*24*H-TZ;m.set(d0,(m.get(d0)||0)+k.mm)}iv=[...m].map(([d0,mm])=>({t0:d0,t1:d0+24*H,i:mm})).filter(k=>k.i>0.05)}
+    $("chartRT").textContent=daily?"ฝนรายวัน (มม.)":"ความแรงฝน (มม./ชม.)";
     const fcH=live?FCP.map(x=>({col:x.col,stale:x.stale,h:x.f.hourly.filter(e=>e.t+H>=now-H&&e.t<=t1)})):[];
     const imax=niceMax(Math.max(10,...iv.map(k=>k.i),...fut.map(k=>k.i),...fcH.flatMap(x=>x.h.map(e=>e.mm)))),Y=v=>top+(1-v/imax)*(Hh-top-bot);
     let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="กราฟความแรงฝน">`;
     for(let i=0;i<=2;i++){const v=imax*i/2;s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${fmt(v)}</text>`}
     for(const t of ticks)s+=`<text x="${X(t).toFixed(1)}" y="${Hh-5}" text-anchor="middle">${tl(t)}</text>`;
-    for(const k of iv.concat(fut)){if(k.t1<t0)continue;const x0=Math.max(padL,X(k.t0))+1,x1=X(k.t1)-1;if(x1<=x0)continue;
-      s+=`<rect x="${x0.toFixed(1)}" y="${Y(k.i).toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${Math.max(0,Y(0)-Y(k.i)).toFixed(1)}" rx="3" fill="var(--rain)" ${k.f?'opacity=".35"':""}><title>${hm(k.t0)}–${hm(k.t1)} · ${fmt(k.i,1)} มม./ชม.</title></rect>`}
+    const unit=daily?"มม.":"มม./ชม.",shown=iv.filter(k=>k.t1>=t0),lab=new Set(shown.slice().sort((a,b)=>b.i-a.i).slice(0,daily?8:3).filter(k=>k.i>=(daily?1:0.5)));
+    for(const k of shown.concat(fut)){let x0=Math.max(padL,X(k.t0))+(daily?0.5:1),x1=X(k.t1)-(daily?0.5:1);if(x1-x0<2){const c=(x0+x1)/2;x0=c-1;x1=c+1}
+      s+=`<rect x="${x0.toFixed(1)}" y="${Y(k.i).toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${Math.max(0,Y(0)-Y(k.i)).toFixed(1)}" rx="${x1-x0>6?3:0}" fill="var(--rain)" ${k.f?'opacity=".35"':""}><title>${daily?dayS(k.t0):hm(k.t0)+"–"+hm(k.t1)} · ${fmt(k.i,1)} ${unit}</title></rect>`;
+      if(lab.has(k))s+=`<text x="${((x0+x1)/2).toFixed(1)}" y="${(Y(k.i)-4).toFixed(1)}" text-anchor="middle" class="lblb">${fmt(k.i,k.i<10?1:0)}</text>`}
     for(const x of fcH){if(!x.h.length)continue;let d="";x.h.forEach((e,i)=>{const xa=Math.max(padL,X(e.t)),xb=Math.min(W-padR,X(e.t+H));d+=(i?"L":"M")+xa.toFixed(1)+" "+Y(e.mm).toFixed(1)+"L"+xb.toFixed(1)+" "+Y(e.mm).toFixed(1)});
       s+=`<path d="${d}" fill="none" stroke="${x.col}" stroke-width="2" opacity="${x.stale?.35:.95}"/>`}
     const cap=currentOut().total/(areaM2()*P.C)*1000;
-    if(cap<imax)s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(cap)}" y2="${Y(cap)}" stroke="var(--water)" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${W-padR}" y="${Y(cap)-4}" text-anchor="end" class="lbl">ปั๊มรับไหว ${fmt(cap,1)}</text>`;
+    if(!daily&&cap<imax)s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(cap)}" y2="${Y(cap)}" stroke="var(--water)" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${W-padR}" y="${Y(cap)-4}" text-anchor="end" class="lbl">ปั๊มรับไหว ${fmt(cap,1)}</text>`;
     s+=`<line x1="${X(now)}" x2="${X(now)}" y1="${top}" y2="${Y(0)}" stroke="var(--ink3)" stroke-dasharray="2 3"/>`;
     if(!live)s+=`<line x1="${X(T)}" x2="${X(T)}" y1="${top}" y2="${Y(0)}" stroke="var(--watch)" stroke-width="2.5"/>`;
     $("chartR").innerHTML=s+`</svg>`;
