@@ -206,7 +206,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <li><b>ฝนวันนี้</b>: ค่า "ฝนสะสม 0.00 น.–ปัจจุบัน" ของสถานี สนข.ทุ่งครุ ครั้งล่าสุดที่บันทึก</li>
       <li><b>ตกแรงตอนนี้</b>: ฝนที่เพิ่มขึ้นระหว่าง 2 ครั้งที่บันทึก ÷ ช่วงเวลา (มม./ชม.) ถ้าไม่มีค่าใหม่เกิน 75 นาทีจะถือว่าฝนหยุด</li>
       <li><b>3 ชม.ล่าสุด</b>: ฝนรวมในช่วง 3 ชั่วโมงก่อนเวลาที่ดูอยู่</li>
-      <li>ระดับ: ต่ำกว่า 10 มม./ชม. ฝนเบา · 10–35 ปานกลาง · 35–50 หนัก · 50 ขึ้นไป หนักมาก (ท่อในหมู่บ้านเต็มเมื่อฝนรวมราว 16 มม. ถ้าปั๊มไม่ทัน)</li>
+      <li>ระดับ: ต่ำกว่า 10 มม./ชม. ฝนเบา · 10–35 ปานกลาง · 35–50 หนัก · 50 ขึ้นไป หนักมาก (ท่อในหมู่บ้านเต็มเมื่อฝนรวมราว <span class="mmFull">13</span> มม. ถ้าปั๊มไม่ทัน)</li>
     </ul></details>
   </section>
 
@@ -332,6 +332,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
         <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
           <li><b>จากคลิประบบระบายน้ำหมู่บ้าน</b>: ท่อเมนยาว ~545 ม. รัศมี 0.5 ม. (เส้นผ่าน 1 ม.) 2 แนว · ท่อในซอยยาว ~140 ม. รัศมี 0.2 ม. (เส้นผ่าน 0.4 ม.) 24 แนว · วัดความยาวจาก Google Earth · ปริมาตร = π × r² × ยาว × จำนวน</li>
           <li><b>จากคลิป</b>: 19 ก.พ. 2568 หมู่บ้านน้ำท่วม ฝนวันนั้นที่สถานี ปตร.คลองรางจาก-ประชาอุทิศ 17.5 มม. บนพื้นที่ 50 ไร่ = น้ำ ~1,400 ลบ.ม. มากกว่าความจุท่อ จึงเอ่อขึ้นถนน แบบจำลองจึงใช้ 50 ไร่ และนับน้ำฝนเข้าท่อเต็ม 100% (C = 1)</li>
+          <li><b>น้ำจากถนนนอกหมู่บ้าน</b>: คลิปฝนหนัก 28 ต.ค. 2569 เห็นน้ำจากถนนหน้าหมู่บ้านที่สูงกว่าไหลเข้ามาเร็วและมาก จึงบวกพื้นที่ถนนนอกหมู่บ้านอีก 10 ไร่ (ค่าประมาณ ยังไม่ได้วัด ราวถนนหน้าหมู่บ้านและทางด่วนด้านบน ยาว ~500 ม. กว้าง ~30 ม.) แก้ได้ที่ช่อง "น้ำจากถนนนอกหมู่บ้าน (ไร่)"</li>
           <li><b>ค่าที่ยังเป็นสมมติฐาน</b>: ท่ออุดตัน 0% (ถ้ามีตะกอน ความจุจะลดลง น้ำขึ้นถนนเร็วขึ้น ใส่ % ได้ใน "ตัวเลขที่ใช้คำนวณ") · บ่อซัมพ์/บ่อพักยังไม่ได้วัด จึงยังไม่นับ</li>
           <li>ปั๊ม 6" ยังใช้ค่าเดิม 210 ลบ.ม./ชม. (ในคลิปใช้ 60–120 ซึ่งน่าจะต่ำไป)</li>
         </ul></details>
@@ -431,7 +432,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
 "use strict";
 const TZ=7*3600e3,H=3600e3,MIN=60e3;
 const DEF={
-  areaRai:50,C:1,storage:1278,mainL:545,mainD:1,mainN:2,soiL:140,soiD:0.4,soiN:24,silt:0,sumpVol:0,gateW:0.8,gateH:0.8,Cd:0.6,pipeCap:600,
+  areaRai:50,extRai:10,C:1,storage:1278,mainL:545,mainD:1,mainN:2,soiL:140,soiD:0.4,soiN:24,silt:0,sumpVol:0,gateW:0.8,gateH:0.8,Cd:0.6,pipeCap:600,
   thrStop:40,thrStart:80,thrWarn:120,thrCanalCrit:150,roadL2:10,roadL3:20,
   pumps:[
     {id:"p7",name:'หอยโข่ง 6" 15 แรง (ประจำบ่อซัมพ์)',lpm:3500},
@@ -445,7 +446,7 @@ const DEF={
 };
 const SHORT={p7:'หอยโข่ง 6"',p4:'#4 DELTON',p5:'#5 DELTON',p2:'#2 TOTAL',p3:'#3 TOTAL',p6:'#6 ZUZUMI',p1:'#1'};
 const DEF_STATE={pumps:{p7:"run"},gate:"open",scI:null,scH:2};
-const PLAB=[["areaRai","พื้นที่รับน้ำ (ไร่)"],["C","สัดส่วนน้ำไหลนอง"],["mainL","ท่อเมน: ยาว (ม.)"],["mainD","ท่อเมน: เส้นผ่าน (ม.)"],["mainN","ท่อเมน: จำนวนแนว"],
+const PLAB=[["areaRai","พื้นที่หมู่บ้าน (ไร่)"],["extRai","น้ำจากถนนนอกหมู่บ้าน (ไร่)"],["C","สัดส่วนน้ำไหลนอง"],["mainL","ท่อเมน: ยาว (ม.)"],["mainD","ท่อเมน: เส้นผ่าน (ม.)"],["mainN","ท่อเมน: จำนวนแนว"],
   ["soiL","ท่อในซอย: ยาว (ม.)"],["soiD","ท่อในซอย: เส้นผ่าน (ม.)"],["soiN","ท่อในซอย: จำนวนแนว"],["silt","ท่ออุดตัน/ตะกอน (%)"],["sumpVol","บ่อซัมพ์+บ่อพัก (ลบ.ม.)"],["pipeCap","ท่อไหลออกเองสูงสุด (ลบ.ม./ชม.)"],
   ["gateW","ช่องประตูกว้าง (ม.)"],["gateH","ช่องประตูสูง (ม.)"],["thrStop","บ่อ: หยุดสูบ (ซม.)"],["thrStart","บ่อ: เริ่มสูบ (ซม.)"],
   ["thrWarn","บ่อ: เตือน (ซม.)"],["thrCanalCrit","คลอง: วิกฤต (ซม.)"],["roadL2","ถนน ระดับ 2 (ซม.)"],["roadL3","ถนน ระดับ 3 (ซม.)"]];
@@ -486,7 +487,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
 let reduce=false;try{reduce=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
 
 /* ---------- physics ---------- */
-const areaM2=()=>P.areaRai*1600;
+const areaRaiAll=()=>P.areaRai+(P.extRai||0),areaM2=()=>areaRaiAll()*1600;
 const mmToM3=mm=>areaM2()*P.C*mm/1000;
 function pumpQ(st){let q=0;for(const p of P.pumps){if((st.pumps||{})[p.id]==="run")q+=(+p.lpm||0)*60/1000}return q}
 // Outflow in the past comes from the pump-state history, never from the buttons as they are now:
@@ -583,7 +584,7 @@ function render(){
   drawLog();
 }
 function renderAt(simAll,T,live){
-  $("areaTxt").textContent=fmt(P.areaRai);document.querySelectorAll(".areaM2").forEach(e=>e.textContent=fmt(areaM2()));document.querySelectorAll(".areaR").forEach(e=>e.textContent=fmt(P.areaRai));document.querySelectorAll(".cR").forEach(e=>e.textContent=P.C);drawPipes();
+  $("areaTxt").textContent=fmt(P.areaRai);document.querySelectorAll(".areaM2").forEach(e=>e.textContent=fmt(areaM2()));document.querySelectorAll(".areaR").forEach(e=>e.textContent=fmt(areaRaiAll())+(P.extRai?" (หมู่บ้าน "+fmt(P.areaRai)+" + ถนนนอกหมู่บ้าน "+fmt(P.extRai)+")":""));document.querySelectorAll(".mmFull").forEach(e=>e.textContent=fmt(P.storage/(areaM2()*P.C)*1000));document.querySelectorAll(".cR").forEach(e=>e.textContent=P.C);drawPipes();
   const sim=live?simAll:{pts:simAll.pts,iv:simAll.iv,start:simAll.start,V:vAt(simAll.pts,T),peak:Math.max(0,...simAll.pts.filter(p=>p.t<=T).map(p=>p.V))};
   const out=currentOut(),cap=out.total/(areaM2()*P.C)*1000;
   let ci;
