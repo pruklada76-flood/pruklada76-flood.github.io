@@ -49,7 +49,19 @@ svg text{font-family:var(--body);font-size:12px;fill:var(--ink2)}
 svg .big{font-family:var(--display);font-weight:700;fill:var(--ink)}
 svg .lbl{font-size:12px;fill:var(--ink2)}
 svg .lblb{font-size:13px;font-weight:600;fill:var(--ink)}
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.rainNow{background:var(--rain-soft);border:1px solid var(--line);border-left:6px solid var(--rain);border-radius:14px;padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.rainNow .rnT{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+.rainNow h2{margin:0;font-size:1rem;color:var(--rain-ink)}
+.rainNow .rnSrc{font-size:.78rem;color:var(--ink2)}
+.rainNow .rnG{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.rainNow .rnI{display:flex;flex-direction:column;min-width:0}
+.rainNow .rnV{font-family:var(--display);font-weight:700;font-size:2.4rem;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--ink)}
+.rainNow .rnV small{font-size:.9rem;font-weight:500;color:var(--ink2);margin-left:4px}
+.rainNow .rnL{font-size:.84rem;color:var(--ink2)}
+.rainNow .rnLv{align-self:flex-start;font-size:.84rem;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--panel);color:var(--ink);margin-top:2px}
+.rainNow .rnLv[data-lv="watch"]{background:var(--watch-bg)} .rainNow .rnLv[data-lv="warn"]{background:var(--warn-bg)} .rainNow .rnLv[data-lv="crit"]{background:var(--crit-bg)}
+@media (max-width:560px){.rainNow .rnV{font-size:1.7rem}.rainNow .rnG{gap:6px}}
 .kpi{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
 .kpi .ic{grid-row:1/3;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:var(--water-soft);color:var(--water)}
 .kpi .ic.r{background:var(--rain-soft);color:var(--rain)}
@@ -80,10 +92,6 @@ svg .lblb{font-size:13px;font-weight:600;fill:var(--ink)}
 @keyframes fall{from{transform:translateY(-14px);opacity:0}20%{opacity:1}to{transform:translateY(26px);opacity:0}}
 .flow{stroke-dasharray:6 6;animation:flow .8s linear infinite}
 @keyframes flow{to{stroke-dashoffset:-12}}
-.heat{display:grid;gap:4px}
-.heat .c{border-radius:6px;padding:7px 2px;text-align:center;font-family:var(--display);font-weight:600;font-size:.85rem;font-variant-numeric:tabular-nums}
-.heat .h{font-size:.8rem;color:var(--ink3);text-align:center;align-self:end}
-.heat .rh{font-size:.76rem;color:var(--ink2);align-self:center;padding-right:4px}
 .c.ok{background:var(--ok-bg);color:var(--ok)} .c.watch{background:var(--watch-bg);color:var(--watch)} .c.warn{background:var(--warn-bg);color:var(--warn)} .c.crit{background:var(--crit-bg);color:var(--crit)}
 .modebox{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
 .modeL{font-family:var(--display);font-weight:700;font-size:2.4rem;line-height:1;width:64px;height:64px;border-radius:12px;display:grid;place-items:center;background:var(--water-soft);color:var(--water)}
@@ -191,6 +199,17 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
     </div>
   </div>
 
+  <section class="rainNow" aria-label="ปริมาณฝน" aria-live="polite">
+    <div class="rnT"><h2>🌧 ฝนที่หมู่บ้าน</h2><span class="rnSrc" id="rnSrc">สถานี สนข.ทุ่งครุ (RF.TKU.01)</span></div>
+    <div class="rnG" id="rnG"></div>
+    <details class="info"><summary>ตัวเลขฝนมาจากไหน</summary><ul>
+      <li><b>ฝนวันนี้</b>: ค่า "ฝนสะสม 0.00 น.–ปัจจุบัน" ของสถานี สนข.ทุ่งครุ ครั้งล่าสุดที่บันทึก</li>
+      <li><b>ตกแรงตอนนี้</b>: ฝนที่เพิ่มขึ้นระหว่าง 2 ครั้งที่บันทึก ÷ ช่วงเวลา (มม./ชม.) ถ้าไม่มีค่าใหม่เกิน 75 นาทีจะถือว่าฝนหยุด</li>
+      <li><b>3 ชม.ล่าสุด</b>: ฝนรวมในช่วง 3 ชั่วโมงก่อนเวลาที่ดูอยู่</li>
+      <li>ระดับ: ต่ำกว่า 10 มม./ชม. ฝนเบา · 10–35 ปานกลาง · 35–50 หนัก · 50 ขึ้นไป หนักมาก (ท่อในหมู่บ้านเต็มเมื่อฝนรวมราว 16 มม. ถ้าปั๊มไม่ทัน)</li>
+    </ul></details>
+  </section>
+
   <section class="card tl" aria-label="แถบย้อนเวลา">
     <div class="tlrow">
       <button type="button" class="tlbtn" id="tlPlay" aria-label="เล่นย้อนหลังแบบ timelapse">▶ เล่น</button>
@@ -230,9 +249,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
         </ul></details>
       </section>
       <section class="kpis" id="kpis"></section>
-      <details class="info"><summary>ตัวเลข 4 ช่องนี้มาจากไหน</summary><ul>
-        <li><b>ฝนสะสมวันนี้</b>: ค่า "ฝนสะสม 0.00 น.–ปัจจุบัน" ของสถานี สนข.ทุ่งครุ ครั้งล่าสุดที่บันทึก</li>
-        <li><b>ความแรงฝนล่าสุด</b>: ฝนที่เพิ่มขึ้นระหว่าง 2 ครั้งที่บันทึก ÷ ช่วงเวลา (มม./ชม.) ถ้าไม่มีค่าใหม่เกิน 75 นาทีจะถือว่าฝนหยุด</li>
+      <details class="info"><summary>ตัวเลข 2 ช่องนี้มาจากไหน</summary><ul>
         <li><b>ระบายออกได้</b>: รวมอัตราสูบของปั๊มที่ตั้งเป็น "เดิน" (ค่าใช้งานจริงโดยประมาณจากตารางปั๊ม) บวกน้ำที่ไหลออกเองเมื่อเปิดประตูและบ่อสูงกว่าคลอง</li>
         <li><b>ฝนที่รับไหวต่อเนื่อง</b>: ถ้าฝนตกแรงกว่านี้ น้ำจะเริ่มสะสม = อัตราระบาย ÷ (พื้นที่ <span class="areaM2">80,000</span> ตร.ม. × สัดส่วนน้ำไหลนอง)</li>
       </ul></details>
@@ -250,8 +267,12 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <section class="card" style="align-items:center;gap:4px">
         <h2 style="align-self:flex-start">เวลาก่อนน้ำขึ้นถนน</h2>
         <div id="countdown" style="width:100%;max-width:320px"></div>
+        <div class="row" style="align-self:stretch">
+          <label class="f" style="flex:1 1 120px">ฝนคาดการณ์ (มม./ชม.)<input id="scI" type="number" min="0" step="1" inputmode="decimal"></label>
+          <label class="f" style="flex:1 1 120px">นาน (ชม.)<input id="scH" type="number" min="0" step="0.5" inputmode="decimal"></label>
+        </div>
         <details class="info" style="align-self:stretch"><summary>ที่มาและวิธีอ่าน</summary><ul>
-          <li>คำนวณว่าถ้าฝนตกตามค่า "ฝนคาดการณ์" (ช่องในตารางสีด้านล่าง ถ้าไม่กรอกจะใช้ความแรงฝนล่าสุด) น้ำค้างจะเต็มความจุเมื่อไร</li>
+          <li>คำนวณว่าถ้าฝนตกตามค่า "ฝนคาดการณ์" (ช่องด้านล่าง ใส่ตามพยากรณ์กรมอุตุฯ ได้ ถ้าไม่กรอกจะใช้ความแรงฝนล่าสุด) น้ำค้างจะเต็มความจุเมื่อไร</li>
           <li>คิดจากน้ำที่ค้างอยู่ตอนนี้ และปั๊มที่ตั้งเป็น "เดิน" อยู่</li>
           <li>"ไม่ท่วม" = ปั๊มสูบทันกับฝนที่คาด · "ขังแล้ว" = น้ำเกินความจุ และบอกเวลาที่คาดว่าน้ำจะลดพ้นถนน</li>
         </ul></details>
@@ -280,23 +301,6 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
           <li>ถ้าหลายแหล่งให้ผลต่างกันมาก แปลว่าพยากรณ์ยังไม่แน่นอน ให้วางแผนตามเส้นที่แย่ที่สุด</li>
           <li>ค่าที่ติดป้าย "ประมาณ" ในประวัติ (ก่อน 21:10 วันที่ 14 ต.ค.) อ่านจากกราฟในภาพหน้าจอสถานี ไม่ใช่ตัวเลขจริงจากสถานี</li>
         </ul></details>
-      </section>
-      <section class="card">
-        <div class="row" style="justify-content:space-between">
-          <h2>ถ้าฝนตกต่อ เหลือเวลาก่อนน้ำขึ้นถนน</h2>
-          <span class="legend"><span><i class="sw" style="background:var(--ok);height:8px"></i>รับไหว</span><span><i class="sw" style="background:var(--warn);height:8px"></i>&lt; 2 ชม.</span><span><i class="sw" style="background:var(--crit);height:8px"></i>&lt; 1 ชม.</span></span>
-        </div>
-        <p class="cap">แถว = ฝนตกนานกี่ชั่วโมง · คอลัมน์ = ฝนแรงกี่ มม./ชม. · ช่อง = เวลาที่เหลือก่อนน้ำขึ้นถนน (ชม.:นาที หรือ น. = นาที)</p>
-        <div class="heat" id="heat"></div>
-        <details class="info"><summary>ที่มาและวิธีอ่าน</summary><ul>
-          <li>คำนวณจากน้ำที่ค้างอยู่ตอนนี้ บวกฝนตามช่อง ลบด้วยปั๊มที่เดินอยู่ ✓ = น้ำไม่เกินความจุจนฝนหยุด</li>
-          <li>เทียบความแรงฝน: 10 มม./ชม. ฝนปานกลาง · 35 มม./ชม. ฝนหนัก · 50–80 มม./ชม. พายุฝนฟ้าคะนองช่วงสั้น (วันนี้ช่วงหนักราว 30 มม./ชม.)</li>
-          <li>ช่อง "ฝนคาดการณ์" และ "นาน" ด้านล่างใช้กับนาฬิกาและเส้นประในกราฟ ใส่ตามพยากรณ์กรมอุตุฯ ได้</li>
-        </ul></details>
-        <div class="row">
-          <label class="f" style="flex:1 1 120px">ฝนคาดการณ์ (มม./ชม.)<input id="scI" type="number" min="0" step="1" inputmode="decimal"></label>
-          <label class="f" style="flex:1 1 120px">นาน (ชม.)<input id="scH" type="number" min="0" step="0.5" inputmode="decimal"></label>
-        </div>
       </section>
     </div>
     <div class="col">
@@ -527,6 +531,13 @@ function project(V0,i,hours,out,horizon=10){
     if(tFill==null&&V>=P.storage&&V0<P.storage)tFill=h;if(tDrain==null&&!on&&V<=0.5)tDrain=h;pts.push({t:NOW()+h*H,V})}
   return{pts,tFill,tDrain,maxV,end:V};
 }
+function rainLv(v){return v<0.5?["ok","ไม่ตก"]:v<10?["watch","ฝนเบา"]:v<35?["warn","ฝนปานกลาง"]:v<50?["crit","ฝนหนัก"]:["crit","ฝนหนักมาก"]}
+function drawRainNow(tr,ci,T){
+  const iv=rainIntervals();let r3=0,has=false;for(const k of iv){const a=Math.max(k.t0,T-3*H),b=Math.min(k.t1,T);if(b>a){r3+=k.mm*(b-a)/(k.t1-k.t0);has=true}}
+  const today=tr&&tr.today,cv=ci&&!ci.stale?ci.v:0,[lv,lt]=ci?(ci.stale?["ok","ฝนหยุด"]:rainLv(cv)):["ok","ยังไม่มีข้อมูล"];
+  const it=(v,u,l,x)=>`<div class="rnI"><span class="rnV">${v}<small>${u}</small></span><span class="rnL">${l}</span>${x||""}</div>`;
+  $("rnG").innerHTML=it(today?fmt(tr.v,1):"–","มม.",today?"ฝนวันนี้ ถึง "+hm(tr.t):"ฝนวันนี้ (ยังไม่มีค่าของวันนี้)")+it(ci?fmt(cv,1):"–","มม./ชม.","ตกแรงตอนนี้",`<span class="rnLv" data-lv="${lv}">${lt}</span>`)+it(has||iv.length?fmt(r3,1):"–","มม.","3 ชม.ล่าสุด");
+  const last=rainRows()[0];$("rnSrc").textContent="สถานี สนข.ทุ่งครุ (RF.TKU.01)"+(last?" · ค่าล่าสุด "+dhm(last.t):"")}
 function curIntensity(){const iv=rainIntervals(),k=iv[iv.length-1];if(!k)return null;if(Date.now()-k.t1>75*MIN)return{v:0,stale:true};return{v:k.mm/((k.t1-k.t0)/H),stale:false,at:k.t1}}
 function todayRain(){const r=rainRows()[0];if(!r)return null;return{v:+r.rain,t:r.t,today:dayKey(r.t)===dayKey(NOW())}}
 function sumpTrend(){const ss=R.filter(r=>num(r.sump)!=null).slice(0,2);if(ss.length<2||NOW()-ss[0].t>3*H)return null;const dh=(ss[0].t-ss[1].t)/H;if(dh<=0)return null;return{rate:(ss[0].sump-ss[1].sump)/dh,level:+ss[0].sump}}
@@ -620,19 +631,11 @@ function renderAt(simAll,T,live){
 
   const inflowNow=ci&&!ci.stale?mmToM3(ci.v):0;
   $("kpis").innerHTML=[
-    ["r",IC.cloud,tr&&tr.today?fmt(tr.v,1):"–","มม.","ฝนสะสมวันนี้"+(tr&&tr.today?" · "+hm(tr.t):"")],
-    ["r",IC.speed,ci?fmt(ci.v,1):"–","มม./ชม.","ความแรงฝนล่าสุด"],
     ["",IC.pump,fmt(out.total),"ลบ.ม./ชม.","ระบายออกได้"],
     ["",IC.drop,fmt(cap,1),"มม./ชม.","ฝนที่รับไหวต่อเนื่อง"]
   ].map(([c,ic,v,u,l])=>`<div class="kpi"><span class="ic ${c}">${ic}</span><span class="v">${v}<small>${u}</small></span><span class="lb">${l}</span></div>`).join("");
 
-  const rates=[5,10,20,35,50,80];
-  let h=`<span></span>`+rates.map(r=>`<span class="h">${r}</span>`).join("");
-  for(const hrs of [1,2,3]){h+=`<span class="rh">${hrs} ชม.</span>`+rates.map(r=>{const p=project(sim.V,r,hrs,out.total,hrs+0.1);
-    if(sim.V>=P.storage)return `<span class="c crit">ขัง</span>`;if(p.tFill==null)return `<span class="c ok">✓</span>`;
-    return `<span class="c ${p.tFill<1?"crit":p.tFill<2?"warn":"watch"}">${durS(p.tFill)}</span>`}).join("")}
-  h+=`<span></span><span class="h" style="grid-column:span ${rates.length}">ฝน มม./ชม.</span>`;
-  $("heat").style.gridTemplateColumns=`auto repeat(${rates.length},minmax(0,1fr))`;$("heat").innerHTML=h;
+  drawRainNow(tr,ci,T);
 
   $("pumps").innerHTML=P.pumps.map(p=>{const s=S.pumps[p.id]||"stand",sl=s==="run"?"เดิน":s==="down"?"เสีย":"พร้อม";return `<button type="button" class="pump" data-p="${p.id}" data-s="${s}" ${canWrite||SIM_OK?"":"disabled"} aria-label="${esc(p.name)} ${sl}">${pumpIcon(s)}<span class="nm">${esc(SHORT[p.id]||p.name)}</span><span class="rt">${p.lpm?fmt(p.lpm*0.06)+" ลบ.ม./ชม.":"ไม่มีสเปก"}</span><span class="st">${sl}</span></button>`}).join("");
   $("pumpSum").textContent=`เดิน ${P.pumps.filter(p=>S.pumps[p.id]==="run").length}/${P.pumps.length}`;
