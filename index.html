@@ -205,7 +205,7 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <li>ลากแถบเพื่อย้อนไปดูเวลาใดก็ได้ ภาพผัง เกจ กราฟ และตัวเลขทั้งหน้าจะแสดงสภาพ ณ เวลานั้น กรอบเส้นประสีเหลืองบอกว่ากำลังดูย้อนหลัง</li>
       <li>▶ เล่น = ไล่เวลาตั้งแต่ต้นจนถึงปัจจุบันแบบ timelapse · ปุ่ม ¼× ถึง 4× ปรับความเร็วได้ แม้กำลังเล่นอยู่ (ปกติ 1× ใช้ราว 20 วินาทีต่อหนึ่งแถบ) · LIVE (สีแดง) = ดูสถานการณ์ปัจจุบันและอัปเดตเอง กดอีกครั้งเพื่อหยุดไว้ที่เวลานั้น</li>
       <li>ตอนดูย้อนหลัง ปุ่มปั๊มและประตูน้ำจะแสดงสถานะ ณ เวลานั้น (นับตั้งแต่ 20 ต.ค. 2569 ที่เริ่มเก็บ) และกดไม่ได้ ต้องกลับ LIVE ก่อน ดูรายการทั้งหมดได้ที่ “บันทึกเปิดปิดปั๊มและประตูน้ำ” ด้านล่าง</li>
-      <li>📅 เลือกวันเวลาย้อนหลัง = ย้ายปลายแถบเวลาไปยังเวลานั้น (ย้อนได้ถึง 90 วัน) แล้วลาก/เล่นดูช่วงก่อนหน้าได้เหมือนเดิม</li>
+      <li>📅 เลือกวันเวลาย้อนหลัง = ย้ายปลายแถบเวลาไปยังเวลานั้น (ย้อนได้ถึง 4 เดือน) แล้วลาก/เล่นดูช่วงก่อนหน้าได้เหมือนเดิม</li>
       <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ข้อมูลที่บันทึกเก็บไว้ถาวร ช่วง 30 วันแสดงได้สูงสุด 1,000 ครั้งล่าสุด</li>
     </ul></details>
     <span class="seg rng" id="spdSeg" role="group" aria-label="ความเร็วตอนเล่น"><button type="button" data-s="0.25">ช้ามาก ¼×</button><button type="button" data-s="0.5">ช้า ½×</button><button type="button" data-s="1">ปกติ 1×</button><button type="button" data-s="2">เร็ว 2×</button><button type="button" data-s="4">เร็วมาก 4×</button></span>
@@ -925,7 +925,7 @@ function pipeVols(o){const v=(d,l,n)=>Math.PI*(d/2)**2*l*n,main=v(o.mainD,o.main
 function withStorage(o){o.storage=Math.max(1,Math.round(pipeVols(o).total));return o}
 function mergeParams(x){const o=clone(DEF);if(!x)return withStorage(o);for(const [k] of PLAB)if(num(x[k])!=null)o[k]=+x[k];if(Array.isArray(x.pumps))for(const p of o.pumps){const q=x.pumps.find(z=>z.id===p.id);if(q){if(num(q.lpm)!=null)p.lpm=+q.lpm;if(q.name)p.name=String(q.name)}}return withStorage(o)}
 function mergeState(x){const o=clone(DEF_STATE);if(!x)return o;if(x.pumps&&typeof x.pumps==="object")o.pumps=Object.assign({},x.pumps);if(x.gate==="open"||x.gate==="closed")o.gate=x.gate;o.scI=num(x.scI);o.scH=num(x.scH)??2;o.updatedAt=num(x.updatedAt);o.hist=Array.isArray(x.hist)?x.hist.filter(e=>e&&num(e.t)!=null&&num(e.q)!=null).map(e=>{const h={t:+e.t,q:+e.q};if(e.p&&typeof e.p==="object")h.p=Object.assign({},e.p);if(e.g==="open"||e.g==="closed")h.g=e.g;return h}).sort((a,b)=>a.t-b.t).slice(-HIST_N):[];if(!o.hist.length&&o.updatedAt)o.hist=[{t:o.updatedAt,q:Math.round(pumpQ(o)),p:Object.assign({},o.pumps),g:o.gate}];return o}
-const HIST_N=300;
+const HIST_N=1000;
 function snapOf(st){return{t:st.updatedAt,q:Math.round(pumpQ(st)),p:Object.assign({},st.pumps),g:st.gate}}
 function sameOps(a,b){if(!a||!b||!a.p||a.g!==b.g||a.q!==b.q)return false;const k=new Set([...Object.keys(a.p),...Object.keys(b.p)]);for(const i of k)if((a.p[i]||"stand")!==(b.p[i]||"stand"))return false;return true}
 // pumps and gate as they were at time t (from the press history); null when no snapshot covers t
@@ -989,7 +989,7 @@ function setAnchor(t){ANCHOR=t;viewT=t;stopPlay();
 $("tlAtGo").addEventListener("click",()=>{const v=fromInput($("tlAt").value);
   if(v==null){$("tlAtMsg").textContent="เลือกวันและเวลาก่อน แล้วกด “ไปดู”";return}
   if(v>=Date.now()-2*MIN){setAnchor(null);return}
-  if(v<Date.now()-90*24*H){$("tlAtMsg").textContent="ย้อนได้ไม่เกิน 90 วัน";return}
+  if(v<Date.now()-122*24*H){$("tlAtMsg").textContent="ย้อนได้ไม่เกิน 4 เดือน";return}
   setAnchor(v)});
 $("tlAt").addEventListener("keydown",e=>{if(e.key==="Enter")$("tlAtGo").click()});
 $("tlPlay").addEventListener("click",()=>{
@@ -1001,7 +1001,7 @@ $("tlPlay").addEventListener("click",()=>{
   render();
 });
 $("eT").value=toInput(Date.now());
-{const a=$("tlAt");a.max=toInput(Date.now());a.min=toInput(Date.now()-90*24*H)}
+{const a=$("tlAt");a.max=toInput(Date.now());a.min=toInput(Date.now()-122*24*H)}
 drawParams();render();connect();
 setInterval(()=>{if(!document.hidden)render()},30000);
 })();
