@@ -1021,6 +1021,8 @@ $("eT").value=toInput(Date.now());
 {const a=$("tlAt");a.max=toInput(Date.now());a.min=toInput(Date.now()-366*24*H)}
 drawParams();render();connect();
 setInterval(()=>{if(!document.hidden)render()},30000);
+// Phones pause background tabs: bring the page up to date as soon as it is shown again.
+document.addEventListener("visibilitychange",()=>{if(document.hidden)return;if(mode==="public")connect();else render()});
 })();
 </script>
 
