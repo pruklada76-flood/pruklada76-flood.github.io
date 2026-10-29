@@ -4,7 +4,7 @@ DUMP_DIR holds war/state.json, war/params.json (optional), readings/*.json, fore
 Readings written by the GitHub job (src starting "gh:") are kept; everything else mirrors the war room."""
 import sys, json, pathlib, time
 dump = pathlib.Path(sys.argv[1]); data = pathlib.Path(__file__).resolve().parent.parent / "data"
-KEEP_DAYS = 122
+KEEP_DAYS = 366
 
 def load_dir(p):
     return [dict(json.loads(f.read_text(encoding="utf-8")), id=f.stem) for f in sorted(p.glob("*.json"))] if p.is_dir() else []

@@ -224,11 +224,11 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
       <li>ลากแถบเพื่อย้อนไปดูเวลาใดก็ได้ ภาพผัง เกจ กราฟ และตัวเลขทั้งหน้าจะแสดงสภาพ ณ เวลานั้น กรอบเส้นประสีเหลืองบอกว่ากำลังดูย้อนหลัง</li>
       <li>▶ เล่น = ไล่เวลาตั้งแต่ต้นจนถึงปัจจุบันแบบ timelapse · ปุ่ม ¼× ถึง 4× ปรับความเร็วได้ แม้กำลังเล่นอยู่ (ปกติ 1× ใช้ราว 20 วินาทีต่อหนึ่งแถบ) · LIVE (สีแดง) = ดูสถานการณ์ปัจจุบันและอัปเดตเอง กดอีกครั้งเพื่อหยุดไว้ที่เวลานั้น</li>
       <li>ตอนดูย้อนหลัง ปุ่มปั๊มและประตูน้ำจะแสดงสถานะ ณ เวลานั้น (นับตั้งแต่ 20 ต.ค. 2569 ที่เริ่มเก็บ) และกดไม่ได้ ต้องกลับ LIVE ก่อน ดูรายการทั้งหมดได้ที่ “บันทึกเปิดปิดปั๊มและประตูน้ำ” ด้านล่าง</li>
-      <li>📅 เลือกวันเวลาย้อนหลัง = ย้ายปลายแถบเวลาไปยังเวลานั้น (ย้อนได้ถึง 4 เดือน) แล้วลาก/เล่นดูช่วงก่อนหน้าได้เหมือนเดิม</li>
-      <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ปุ่ม 2–4 เดือนใช้ดูภาพรวมย้อนหลัง ข้อมูลที่บันทึกเก็บไว้ถาวร</li>
+      <li>📅 เลือกวันเวลาย้อนหลัง = ย้ายปลายแถบเวลาไปยังเวลานั้น (ย้อนได้ถึง 1 ปี) แล้วลาก/เล่นดูช่วงก่อนหน้าได้เหมือนเดิม</li>
+      <li>ปุ่มช่วงเวลาเลือกได้ว่าจะย้อนดูไกลแค่ไหน ถ้าข้อมูลขาดหายเกิน 6 ชม. ระบบจะถือว่าเป็นฝนอีกชุดหนึ่ง และนับน้ำค้างต่อจากที่ระบายออกไปแล้ว ปุ่ม 2 เดือนถึง 1 ปีใช้ดูภาพรวมย้อนหลัง ข้อมูลที่บันทึกเก็บไว้ถาวร</li>
     </ul></details>
     <span class="seg rng" id="spdSeg" role="group" aria-label="ความเร็วตอนเล่น"><button type="button" data-s="0.25">ช้ามาก ¼×</button><button type="button" data-s="0.5">ช้า ½×</button><button type="button" data-s="1">ปกติ 1×</button><button type="button" data-s="2">เร็ว 2×</button><button type="button" data-s="4">เร็วมาก 4×</button></span>
-    <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="1">1 ชม.</button><button type="button" data-h="3">3 ชม.</button><button type="button" data-h="6">6 ชม.</button><button type="button" data-h="24">24 ชม.</button><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button><button type="button" data-h="1440">2 เดือน</button><button type="button" data-h="2160">3 เดือน</button><button type="button" data-h="2880">4 เดือน</button></span>
+    <span class="seg rng" id="rngSeg" role="group" aria-label="ช่วงเวลาที่ย้อนดู"><button type="button" data-h="1">1 ชม.</button><button type="button" data-h="3">3 ชม.</button><button type="button" data-h="6">6 ชม.</button><button type="button" data-h="24">24 ชม.</button><button type="button" data-h="36">36 ชม.</button><button type="button" data-h="72">3 วัน</button><button type="button" data-h="168">7 วัน</button><button type="button" data-h="720">30 วัน</button><button type="button" data-h="1440">2 เดือน</button><button type="button" data-h="2160">3 เดือน</button><button type="button" data-h="2880">4 เดือน</button><button type="button" data-h="4380">6 เดือน</button><button type="button" data-h="8784">1 ปี</button></span>
     </div>
   </section>
 
@@ -462,7 +462,7 @@ function projectHourly(V0,hourly,out,horizon=12){
   return{pts,tFill,maxV,tot};
 }
 let SPEED=1;try{const v=+localStorage.getItem("wr_speed");if([0.25,0.5,1,2,4].includes(v))SPEED=v}catch(e){}
-let VIEW_H=36;try{const v=+localStorage.getItem("wr_range");if([1,3,6,24,36,72,168,720,1440,2160,2880].includes(v))VIEW_H=v}catch(e){}
+let VIEW_H=36;try{const v=+localStorage.getItem("wr_range");if([1,3,6,24,36,72,168,720,1440,2160,2880,4380,8784].includes(v))VIEW_H=v}catch(e){}
 let RANGE_H=Math.max(36,VIEW_H);// data/simulation window; short views only zoom the display
 const NOW=()=>NOWV??Date.now();
 let ANCHOR=null;const WEND=()=>ANCHOR??Date.now();// end of the viewed window: now, or a past time the viewer picked
@@ -804,7 +804,7 @@ function drawCharts(sim,pr,scI,scH,live){
   const W=760,padL=46,padR=12,now=WEND(),T=NOW();
   const fut=Math.max(4,Math.min(10,(scH||0)+4))*(RANGE_H>72?2:1),t0=VIEW_H<36?now-VIEW_H*H:Math.min(sim.start,now-RANGE_H*H),t1=now+(VIEW_H<36?Math.min(fut,Math.max(0.5,VIEW_H/3)):fut)*H;
   const X=t=>padL+(t-t0)/(t1-t0)*(W-padL-padR);
-  const sp=t1-t0,ticks=[],step=sp>50*24*H?14*24*H:sp>20*24*H?5*24*H:sp>6*24*H?24*H:sp>50*H?12*H:sp>18*H?3*H:sp>9*H?2*H:sp>4*H?H:sp>2*H?30*MIN:15*MIN;
+  const sp=t1-t0,ticks=[],step=sp>200*24*H?30*24*H:sp>50*24*H?14*24*H:sp>20*24*H?5*24*H:sp>6*24*H?24*H:sp>50*H?12*H:sp>18*H?3*H:sp>9*H?2*H:sp>4*H?H:sp>2*H?30*MIN:15*MIN;
   for(let t=Math.ceil((t0+TZ)/step)*step-TZ;t<=t1;t+=step)ticks.push(t);
   const tl=t=>{if(step<12*H)return hm(t);const d=bkk(t);return d.getUTCDate()+" "+TH_M[d.getUTCMonth()]+(step===12*H?" "+hm(t):"")};
   {const Hh=210,top=12,bot=24,nice=niceMax(Math.max(P.storage*1.25,sim.peak*1.1,...pr.pts.map(p=>p.V),...FCP.map(x=>x.maxV))||1),Y=v=>top+(1-v/nice)*(Hh-top-bot);
@@ -844,7 +844,7 @@ function drawCharts(sim,pr,scI,scH,live){
     let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="กราฟความแรงฝน">`;
     for(let i=0;i<=2;i++){const v=imax*i/2;s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${fmt(v)}</text>`}
     for(const t of ticks)s+=`<text x="${X(t).toFixed(1)}" y="${Hh-5}" text-anchor="middle">${tl(t)}</text>`;
-    const unit=daily?"มม.":"มม./ชม.",shown=iv.filter(k=>k.t1>=t0),lab=new Set(shown.slice().sort((a,b)=>b.i-a.i).slice(0,daily?8:3).filter(k=>k.i>=(daily?1:0.5)));
+    const unit=daily?"มม.":"มม./ชม.",shown=iv.filter(k=>k.t1>=t0),lab=new Set(),px=[];for(const k of shown.slice().sort((a,b)=>b.i-a.i)){if(lab.size>=(daily?8:3)||k.i<(daily?1:0.5))break;const c=(X(k.t0)+X(k.t1))/2;if(px.every(x=>Math.abs(x-c)>=26)){lab.add(k);px.push(c)}}
     for(const k of shown.concat(fut)){let x0=Math.max(padL,X(k.t0))+(daily?0.5:1),x1=X(k.t1)-(daily?0.5:1);if(x1-x0<2){const c=(x0+x1)/2;x0=c-1;x1=c+1}
       s+=`<rect x="${x0.toFixed(1)}" y="${Y(k.i).toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${Math.max(0,Y(0)-Y(k.i)).toFixed(1)}" rx="${x1-x0>6?3:0}" fill="var(--rain)" ${k.f?'opacity=".35"':""}><title>${daily?dayS(k.t0):hm(k.t0)+"–"+hm(k.t1)} · ${fmt(k.i,1)} ${unit}</title></rect>`;
       if(lab.has(k))s+=`<text x="${((x0+x1)/2).toFixed(1)}" y="${(Y(k.i)-4).toFixed(1)}" text-anchor="middle" class="lblb">${fmt(k.i,k.i<10?1:0)}</text>`}
@@ -1006,7 +1006,7 @@ function setAnchor(t){ANCHOR=t;viewT=t;stopPlay();
 $("tlAtGo").addEventListener("click",()=>{const v=fromInput($("tlAt").value);
   if(v==null){$("tlAtMsg").textContent="เลือกวันและเวลาก่อน แล้วกด “ไปดู”";return}
   if(v>=Date.now()-2*MIN){setAnchor(null);return}
-  if(v<Date.now()-122*24*H){$("tlAtMsg").textContent="ย้อนได้ไม่เกิน 4 เดือน";return}
+  if(v<Date.now()-366*24*H){$("tlAtMsg").textContent="ย้อนได้ไม่เกิน 1 ปี";return}
   setAnchor(v)});
 $("tlAt").addEventListener("keydown",e=>{if(e.key==="Enter")$("tlAtGo").click()});
 $("tlPlay").addEventListener("click",()=>{
@@ -1018,7 +1018,7 @@ $("tlPlay").addEventListener("click",()=>{
   render();
 });
 $("eT").value=toInput(Date.now());
-{const a=$("tlAt");a.max=toInput(Date.now());a.min=toInput(Date.now()-122*24*H)}
+{const a=$("tlAt");a.max=toInput(Date.now());a.min=toInput(Date.now()-366*24*H)}
 drawParams();render();connect();
 setInterval(()=>{if(!document.hidden)render()},30000);
 })();
