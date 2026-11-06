@@ -1,1 +1,1 @@
-{"updatedAt":1793922276275,"warroomSyncAt":1793922276275,"fetchFails":["forecast openmeteo-gfs: HTTP Error 503: Service Unavailable","canal: station not in thaiwater waterlevel_load","canal BMA: HTTP Error 403: Forbidden"]}
+{"updatedAt":1793923462921,"warroomSyncAt":1793922276275,"fetchFails":["canal: station not in thaiwater waterlevel_load","canal BMA: HTTP Error 403: Forbidden"]}
