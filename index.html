@@ -376,7 +376,8 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
         <div class="snap" id="csvBox">
           <div class="snapT">นำเข้าไฟล์ CSV จากสถานี กทม. (แม่นที่สุด)</div>
           <ol class="snapSteps">
-            <li>เปิด <a href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">weather.bangkok.go.th ↗</a> เลือกสถานีฝน <b>ปตร.คลองรางจาก-ประชาอุทิศ</b> (ใกล้หมู่บ้านที่สุด) หรือ <b>สนข.ทุ่งครุ</b> หรือสถานีระดับน้ำ <b>ปตร.คลองรางจาก-ประชาอุทิศ (WL.RJK.01)</b> แล้วกดดาวน์โหลด CSV</li>
+            <li>เปิดหน้าสถานี แล้วเลื่อนลงไปกดปุ่ม <b>CSV</b> ที่ตารางข้อมูลย้อนหลัง
+              <div class="row"><a class="btn" href="https://weather.bangkok.go.th/rain/StationDetail?id=42" target="_blank" rel="noopener">🌧 หน้าฝน สนข.ทุ่งครุ ↗</a><a class="btn" href="https://weather.bangkok.go.th/water/StationDetail?id=103" target="_blank" rel="noopener">🌊 หน้าระดับน้ำคลองรางจาก ↗</a></div></li>
             <li><span class="row" style="gap:8px;flex-wrap:wrap"><label class="btn primary" id="csvPick">🌧 CSV น้ำฝน<input id="csvFile" type="file" accept=".csv,text/csv" multiple hidden></label><label class="btn primary" id="csvPickWl">🌊 CSV ระดับน้ำคลอง<input id="csvFileWl" type="file" accept=".csv,text/csv" multiple hidden></label></span></li>
           </ol>
           <div class="tiny" id="csvMsg" aria-live="polite">ระบบดูให้เองว่าเป็นไฟล์ฝนหรือระดับน้ำ เลือกหลายไฟล์พร้อมกันได้ ไม่ต้องกด บันทึก ซ้ำ</div>
@@ -385,14 +386,14 @@ details.info ul{margin:6px 0 0;padding-left:1.15em;display:flex;flex-direction:c
           <div class="snapT">อัปเดตเร็วจากภาพหน้าจอ</div>
           <ol class="snapSteps">
             <li>เปิดหน้าเว็บ แล้วแคปหน้าจอ
-              <div class="row"><a class="btn" href="https://weather.bangkok.go.th/" target="_blank" rel="noopener">ฝนทุ่งครุ ↗</a><a class="btn" href="https://weather.bangkok.go.th/water" target="_blank" rel="noopener">ระดับน้ำคลอง ↗</a></div></li>
+              <div class="row"><a class="btn" href="https://weather.bangkok.go.th/rain/StationDetail?id=42" target="_blank" rel="noopener">ฝนทุ่งครุ ↗</a><a class="btn" href="https://weather.bangkok.go.th/water/StationDetail?id=103" target="_blank" rel="noopener">ระดับน้ำคลอง ↗</a></div></li>
             <li id="snapStep2">ส่งภาพเข้ามา (เลือกได้ 2 ภาพพร้อมกัน หรือกดวางภาพ)
               <div class="row"><label class="btn primary" id="snapPick">เลือกภาพหน้าจอ<input id="snapFile" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden></label><button type="button" class="btn" id="snapStop" hidden>หยุด</button></div></li>
             <li>ตรวจตัวเลขที่ระบบกรอกให้ด้านล่าง แล้วกด <b>บันทึก</b></li>
           </ol>
           <div class="tiny" id="snapMsg" aria-live="polite"></div>
         </div>
-        <a class="tiny" id="snapAlt" href="https://weather.bangkok.go.th/" target="_blank" rel="noopener" hidden>เปิดหน้าสถานีฝน สนข. ↗</a>
+        <a class="tiny" id="snapAlt" href="https://weather.bangkok.go.th/rain/StationDetail?id=42" target="_blank" rel="noopener" hidden>เปิดหน้าสถานีฝน สนข. ↗</a>
         <form class="entry" id="entry">
           <label class="f">เวลา<input id="eT" type="datetime-local" required></label>
           <label class="f">ฝนสะสมวันนี้ มม.<input id="eRain" type="number" step="0.1" min="0" inputmode="decimal"></label>
