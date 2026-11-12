@@ -722,7 +722,7 @@ function drawScheme(sim,out,md,road,ci){
     if(on)o+=`<path d="${dp}" fill="none" stroke="var(--water2)" stroke-width="${pw-5}" class="${reduce?"":"flow"}"/>`;
     o+=`<circle cx="${px}" cy="${py}" r="${r}" fill="var(--panel)" stroke="${pc}" stroke-width="3.5"/><g class="${on&&!reduce?"spin":""}"><path d="M${px} ${py} L${px} ${py-11*k} M${px} ${py} L${px+9.5*k} ${py+5.5*k} M${px} ${py} L${px-9.5*k} ${py+5.5*k}" stroke="${pc}" stroke-width="3" stroke-linecap="round"/></g>`;
     o+=`<text x="${px-r-4}" y="${py+4}" text-anchor="end" class="lblb">${id==="p1"?'8"':'6"'}</text>`;return o};
-  s+=pump("p1",sx+sw-20,sTop-56,20,cx0-6,13)+pump("p7",sx+22,sTop-26,16,cx0-6,9);// both discharge at the same point in the canal
+  s+=pump("p1",sx+22,sTop-56,20,cx0-6,13)+pump("p7",sx+sw-20,sTop-26,16,cx0-6,9);// both discharge at the same point in the canal
   {const st=id=>S.pumps[id]==="run"?"เดิน":S.pumps[id]==="down"?"เสีย":"ไม่เดิน",any=S.pumps.p7==="run"||S.pumps.p1==="run";
    s+=`<text x="${(sx+cx0)/2+30}" y="${sTop-90}" text-anchor="middle" class="lblb">ปั๊ม 6" ${st("p7")} · 8" ${st("p1")}${any?" · สูบรวม "+fmt(out.pump)+" ลบ.ม./ชม.":""}</text>`}
   s+=`<rect x="${sx+sw}" y="229.5" width="${cx0-sx-sw}" height="20" fill="var(--panel)" stroke="var(--metal)" stroke-width="2"/>`;
