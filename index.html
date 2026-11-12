@@ -437,7 +437,7 @@ const DEF={
   thrStop:40,thrStart:80,thrWarn:120,thrCanalCrit:150,roadL2:10,roadL3:20,
   pumps:[
     {id:"p7",name:'หอยโข่ง 6" 15 แรง (ประจำบ่อซัมพ์)',lpm:3500},
-    {id:"p1",name:'#1 Vertical pump 8" 10 แรง (ประจำบ่อซัมพ์)',lpm:8333},
+    {id:"p1",name:'#1 Vertical pump 8" 10 แรง (ประจำบ่อซัมพ์)',lpm:5000},
     {id:"p4",name:'#4 DELTON 3"',lpm:413},
     {id:"p5",name:'#5 DELTON 3"',lpm:413},
     {id:"p2",name:'#2 TOTAL 2"',lpm:216},
@@ -713,7 +713,7 @@ function drawScheme(sim,out,md,road,ci){
   s+=`<rect x="${sx+2}" y="${sumpLevel.toFixed(1)}" width="${sw-4}" height="${(sBot-sumpLevel-1).toFixed(1)}" fill="url(#gw)"/>`;
   for(const [v,c] of [[P.thrWarn,"var(--crit)"],[P.thrStart,"var(--warn)"]]){const y=sY(v);s+=`<line x1="${sx}" x2="${sx+sw}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.5" stroke-dasharray="4 3"/>`}
   s+=`<text x="${sx+sw/2}" y="${Hh-10}" text-anchor="middle" class="lblb">บ่อซัมพ์${md.sv!=null?" "+fmt(md.sv)+" ซม.":""}</text>`;
-  // Two pumps in the sump: the 6" centrifugal (p7) and the 8" vertical pump (#1, installed Nov 2026), each with its own discharge pipe to the canal.
+  // Two pumps in the sump: the 6" centrifugal (p7) and the 8" vertical pump (#1, installed Nov 2026), each with its own discharge pipe, both ending at the same outlet in the canal.
   const pcol=id=>S.pumps[id]==="run"?"var(--water)":S.pumps[id]==="down"?"var(--crit)":"var(--metal)";
   const pump=(id,px,py,r,pipeX,pw)=>{const on=S.pumps[id]==="run",pc=pcol(id),k=r/18;let o="";
     o+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${sBot-14}" stroke="var(--metal)" stroke-width="${pw>9?7:5}"/>`;
@@ -722,7 +722,7 @@ function drawScheme(sim,out,md,road,ci){
     if(on)o+=`<path d="${dp}" fill="none" stroke="var(--water2)" stroke-width="${pw-5}" class="${reduce?"":"flow"}"/>`;
     o+=`<circle cx="${px}" cy="${py}" r="${r}" fill="var(--panel)" stroke="${pc}" stroke-width="3.5"/><g class="${on&&!reduce?"spin":""}"><path d="M${px} ${py} L${px} ${py-11*k} M${px} ${py} L${px+9.5*k} ${py+5.5*k} M${px} ${py} L${px-9.5*k} ${py+5.5*k}" stroke="${pc}" stroke-width="3" stroke-linecap="round"/></g>`;
     o+=`<text x="${px-r-4}" y="${py+4}" text-anchor="end" class="lblb">${id==="p1"?'8"':'6"'}</text>`;return o};
-  s+=pump("p7",sx+22,sTop-26,16,cx0-6,9)+pump("p1",sx+sw-20,sTop-56,20,cx0+18,13);
+  s+=pump("p1",sx+sw-20,sTop-56,20,cx0-6,13)+pump("p7",sx+22,sTop-26,16,cx0-6,9);// both discharge at the same point in the canal
   {const st=id=>S.pumps[id]==="run"?"เดิน":S.pumps[id]==="down"?"เสีย":"ไม่เดิน",any=S.pumps.p7==="run"||S.pumps.p1==="run";
    s+=`<text x="${(sx+cx0)/2+30}" y="${sTop-90}" text-anchor="middle" class="lblb">ปั๊ม 6" ${st("p7")} · 8" ${st("p1")}${any?" · สูบรวม "+fmt(out.pump)+" ลบ.ม./ชม.":""}</text>`}
   s+=`<rect x="${sx+sw}" y="229.5" width="${cx0-sx-sw}" height="20" fill="var(--panel)" stroke="var(--metal)" stroke-width="2"/>`;
