@@ -437,15 +437,15 @@ const DEF={
   thrStop:40,thrStart:80,thrWarn:120,thrCanalCrit:150,roadL2:10,roadL3:20,
   pumps:[
     {id:"p7",name:'หอยโข่ง 6" 15 แรง (ประจำบ่อซัมพ์)',lpm:3500},
+    {id:"p1",name:'#1 Vertical pump 8" 10 แรง (ประจำบ่อซัมพ์)',lpm:8333},
     {id:"p4",name:'#4 DELTON 3"',lpm:413},
     {id:"p5",name:'#5 DELTON 3"',lpm:413},
     {id:"p2",name:'#2 TOTAL 2"',lpm:216},
     {id:"p3",name:'#3 TOTAL 2"',lpm:216},
-    {id:"p6",name:'#6 ZUZUMI 2"',lpm:150},
-    {id:"p1",name:'#1 (ยังไม่มีสเปก)',lpm:0}
+    {id:"p6",name:'#6 ZUZUMI 2"',lpm:150}
   ]
 };
-const SHORT={p7:'หอยโข่ง 6"',p4:'#4 DELTON',p5:'#5 DELTON',p2:'#2 TOTAL',p3:'#3 TOTAL',p6:'#6 ZUZUMI',p1:'#1'};
+const SHORT={p7:'หอยโข่ง 6"',p4:'#4 DELTON',p5:'#5 DELTON',p2:'#2 TOTAL',p3:'#3 TOTAL',p6:'#6 ZUZUMI',p1:'แนวตั้ง 8"'};
 const DEF_STATE={pumps:{p7:"run"},gate:"open",scI:null,scH:2};
 const PLAB=[["areaRai","พื้นที่หมู่บ้าน (ไร่)"],["extRai","น้ำจากถนนนอกหมู่บ้าน (ไร่)"],["C","สัดส่วนน้ำไหลนอง"],["mainL","ท่อเมน: ยาว (ม.)"],["mainD","ท่อเมน: เส้นผ่าน (ม.)"],["mainN","ท่อเมน: จำนวนแนว"],
   ["soiL","ท่อในซอย: ยาว (ม.)"],["soiD","ท่อในซอย: เส้นผ่าน (ม.)"],["soiN","ท่อในซอย: จำนวนแนว"],["silt","ท่ออุดตัน/ตะกอน (%)"],["sumpVol","บ่อซัมพ์+บ่อพัก (ลบ.ม.)"],["pipeCap","ท่อไหลออกเองสูงสุด (ลบ.ม./ชม.)"],
@@ -617,6 +617,7 @@ function renderAt(simAll,T,live){
   const acts=[];
   if(!R.length)acts.push(["ok","กด “บันทึกค่าใหม่” ด้านล่างเพื่อเริ่ม"]);
   if(S.pumps.p7!=="run"&&lv!=="ok")acts.push(["crit","เดินปั๊ม 6\""]);
+  if(S.pumps.p1!=="run"&&S.pumps.p1!=="down"&&lv!=="ok")acts.push(["crit","เดินปั๊ม 8\" แนวตั้ง"]);
   if(md.gate&&md.gate!==S.gate)acts.push(["warn",(md.gate==="open"?"เปิด":"ปิด")+"ประตูน้ำ (โหมด "+md.m+")"]);
   if(lv==="watch"){acts.push(["watch","พร่องน้ำบ่อซัมพ์"]);acts.push(["watch","อ่านไม้วัดทุก 30 นาที"])}
   if(lv==="warn"||lv==="crit"){acts.push([lv,"วาง DELTON #4 #5 จุดต่ำ"]);acts.push([lv,"เตรียมเครื่องปั่นไฟ"])}
@@ -712,13 +713,18 @@ function drawScheme(sim,out,md,road,ci){
   s+=`<rect x="${sx+2}" y="${sumpLevel.toFixed(1)}" width="${sw-4}" height="${(sBot-sumpLevel-1).toFixed(1)}" fill="url(#gw)"/>`;
   for(const [v,c] of [[P.thrWarn,"var(--crit)"],[P.thrStart,"var(--warn)"]]){const y=sY(v);s+=`<line x1="${sx}" x2="${sx+sw}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.5" stroke-dasharray="4 3"/>`}
   s+=`<text x="${sx+sw/2}" y="${Hh-10}" text-anchor="middle" class="lblb">บ่อซัมพ์${md.sv!=null?" "+fmt(md.sv)+" ซม.":""}</text>`;
-  const px=sx+sw/2,py=sTop-26,pc=run?"var(--water)":S.pumps.p7==="down"?"var(--crit)":"var(--metal)";
-  s+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${sBot-14}" stroke="var(--metal)" stroke-width="5"/>`;
-  s+=`<circle cx="${px}" cy="${py}" r="18" fill="var(--panel)" stroke="${pc}" stroke-width="3.5"/><g class="${run&&!reduce?"spin":""}"><path d="M${px} ${py} L${px} ${py-11} M${px} ${py} L${px+9.5} ${py+5.5} M${px} ${py} L${px-9.5} ${py+5.5}" stroke="${pc}" stroke-width="3" stroke-linecap="round"/></g>`;
-  const dp=`M${px+18} ${py} H${cx0-30} Q${cx0-6} ${py} ${cx0-6} ${py+22} V${cTop+8}`;
-  s+=`<path d="${dp}" fill="none" stroke="var(--metal)" stroke-width="9" stroke-linecap="round"/>`;
-  if(run)s+=`<path d="${dp}" fill="none" stroke="var(--water2)" stroke-width="4" class="${reduce?"":"flow"}"/>`;
-  s+=`<text x="${(px+cx0)/2+10}" y="${py-24}" text-anchor="middle" class="lblb">${run?"ปั๊ม 6\" สูบ "+fmt(out.pump)+" ลบ.ม./ชม.":"ปั๊ม 6\" ไม่เดิน"}</text>`;
+  // Two pumps in the sump: the 6" centrifugal (p7) and the 8" vertical pump (#1, installed Nov 2026), each with its own discharge pipe to the canal.
+  const pcol=id=>S.pumps[id]==="run"?"var(--water)":S.pumps[id]==="down"?"var(--crit)":"var(--metal)";
+  const pump=(id,px,py,r,pipeX,pw)=>{const on=S.pumps[id]==="run",pc=pcol(id),k=r/18;let o="";
+    o+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${sBot-14}" stroke="var(--metal)" stroke-width="${pw>9?7:5}"/>`;
+    const dp=`M${px+r} ${py} H${pipeX-24} Q${pipeX} ${py} ${pipeX} ${py+24} V${cTop+8}`;
+    o+=`<path d="${dp}" fill="none" stroke="var(--metal)" stroke-width="${pw}" stroke-linecap="round"/>`;
+    if(on)o+=`<path d="${dp}" fill="none" stroke="var(--water2)" stroke-width="${pw-5}" class="${reduce?"":"flow"}"/>`;
+    o+=`<circle cx="${px}" cy="${py}" r="${r}" fill="var(--panel)" stroke="${pc}" stroke-width="3.5"/><g class="${on&&!reduce?"spin":""}"><path d="M${px} ${py} L${px} ${py-11*k} M${px} ${py} L${px+9.5*k} ${py+5.5*k} M${px} ${py} L${px-9.5*k} ${py+5.5*k}" stroke="${pc}" stroke-width="3" stroke-linecap="round"/></g>`;
+    o+=`<text x="${px-r-4}" y="${py+4}" text-anchor="end" class="lblb">${id==="p1"?'8"':'6"'}</text>`;return o};
+  s+=pump("p7",sx+22,sTop-26,16,cx0-6,9)+pump("p1",sx+sw-20,sTop-56,20,cx0+18,13);
+  {const st=id=>S.pumps[id]==="run"?"เดิน":S.pumps[id]==="down"?"เสีย":"ไม่เดิน",any=S.pumps.p7==="run"||S.pumps.p1==="run";
+   s+=`<text x="${(sx+cx0)/2+30}" y="${sTop-90}" text-anchor="middle" class="lblb">ปั๊ม 6" ${st("p7")} · 8" ${st("p1")}${any?" · สูบรวม "+fmt(out.pump)+" ลบ.ม./ชม.":""}</text>`}
   s+=`<rect x="${sx+sw}" y="229.5" width="${cx0-sx-sw}" height="20" fill="var(--panel)" stroke="var(--metal)" stroke-width="2"/>`;
   if(gateOpen&&out.grav>0)s+=`<rect x="${sx+sw}" y="233.5" width="${cx0-sx-sw}" height="12" fill="var(--water2)"/>`;
   const gx=cx0-26,gy=gateOpen?197.5:225.5;// outlet sits 10 cm (7.5 px on the canal scale) below its first position
@@ -729,7 +735,7 @@ function drawScheme(sim,out,md,road,ci){
   if(canalLevel!=null)s+=`<rect x="${cx0+2}" y="${canalLevel.toFixed(1)}" width="${cx1-cx0-4}" height="${(cBot-canalLevel-1).toFixed(1)}" fill="url(#gw)"/>`;
   else s+=`<text x="${(cx0+cx1)/2}" y="${(cTop+cBot)/2}" text-anchor="middle" class="lbl">ยังไม่มีค่า</text>`;
   if(wl!=null){for(const [v,c] of [[th.warnIn,"var(--warn)"],[th.critIn,"var(--crit)"]]){const y=wY(v);s+=`<line x1="${cx0}" x2="${cx1}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.5" stroke-dasharray="4 3"/>`}
-    s+=`<text x="${(cx0+cx1)/2}" y="${cTop-8}" text-anchor="middle" class="lblb" style="fill:${wl>=th.critIn?"var(--crit)":wl>=th.warnIn?"var(--warn)":"var(--ink)"}">${wl.toFixed(2)} ม.รทก.</text>`;
+    s+=`<text x="${(cx0+cx1)/2+12}" y="${cTop-8}" text-anchor="middle" class="lblb" style="fill:${wl>=th.critIn?"var(--crit)":wl>=th.warnIn?"var(--warn)":"var(--ink)"}">${wl.toFixed(2)} ม.รทก.</text>`;
     s+=`<text x="${(cx0+cx1)/2}" y="${Hh-10}" text-anchor="middle" class="lblb">${innerWidth<640?"คลอง":"คลองรางจาก"+(wlR&&NOW()-wlR.t>H?" ("+hm(wlR.t)+")":"")}</text>`}
   else{const ccy=cY(P.thrCanalCrit);s+=`<line x1="${cx0}" x2="${cx1}" y1="${ccy}" y2="${ccy}" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
   s+=`<text x="${(cx0+cx1)/2}" y="${Hh-10}" text-anchor="middle" class="lblb">คลอง${md.cv!=null?" "+fmt(md.cv)+" ซม.":""}</text>`}
@@ -737,7 +743,7 @@ function drawScheme(sim,out,md,road,ci){
 }
 
 function drawPipes(){
-  const el=$("pipes");if(!el)return;const v=pipeVols(P),W=420,Hh=250,mx0=40,mx1=380,my=106,pump=(P.pumps.find(p=>p.id==="p7")||{lpm:0}).lpm*0.06;
+  const el=$("pipes");if(!el)return;const v=pipeVols(P),W=420,Hh=250,mx0=40,mx1=380,my=106,pump=P.pumps.filter(p=>p.id==="p7"||p.id==="p1").reduce((a,p)=>a+(+p.lpm||0),0)*0.06;
   const nS=Math.max(0,Math.round(P.soiN)),half=Math.ceil(nS/2),stub=42,silt=v.k<1;
   let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="ผังท่อระบายในหมู่บ้าน">`;
   s+=`<rect x="0" y="34" width="16" height="140" rx="3" fill="var(--water2)" opacity=".7"/><text x="0" y="186" class="lbl">คลอง</text>`;
