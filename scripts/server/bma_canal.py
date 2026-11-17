@@ -2,7 +2,7 @@
 """Canal level WL.RJK.01 (ปตร.คลองรางจาก-ประชาอุทิศ) from the BMA drainage site, for the village server.
 
 The BMA site blocks cloud machines, so this runs on the village's own Linux server (cron) and the
-result is pushed to this repo as data/canal-rjk.json. Python 3.8+ standard library only.
+result is pushed to this repo as data/canal-rjk.json. Python 3.6+ standard library only.
 
   python3 bma_canal.py fetch [--url URL] [--html FILE] [--ca-file PEM]  > rows.json
   python3 bma_canal.py merge rows.json path/to/data/canal-rjk.json     (prints number of new rows)
@@ -131,8 +131,9 @@ def cmd_merge(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    sp = ap.add_subparsers(dest="cmd", required=True)
+    sp = ap.add_subparsers(dest="cmd")   # no required=True: Python 3.6 (CentOS 7) lacks it
     f = sp.add_parser("fetch"); f.add_argument("--url", default=URL); f.add_argument("--html"); f.add_argument("--ca-file")
     m = sp.add_parser("merge"); m.add_argument("rows"); m.add_argument("target")
     a = ap.parse_args()
+    if not a.cmd: ap.error("choose fetch or merge")
     cmd_fetch(a) if a.cmd == "fetch" else cmd_merge(a)
