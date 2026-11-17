@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""Canal level WL.RJK.01 (ปตร.คลองรางจาก-ประชาอุทิศ) from the BMA drainage site, for the village server.
+
+The BMA site blocks cloud machines, so this runs on the village's own Linux server (cron) and the
+result is pushed to this repo as data/canal-rjk.json. Python 3.8+ standard library only.
+
+  python3 bma_canal.py fetch [--url URL] [--html FILE] [--ca-file PEM]  > rows.json
+  python3 bma_canal.py merge rows.json path/to/data/canal-rjk.json     (prints number of new rows)
+
+fetch: reads table id="example" (48 h at 5 min: Thai date-time in the Buddhist year, inner level,
+outer level in m MSL, "-" = no reading). TLS certificates are always verified; if the server's
+chain is incomplete, pass the missing intermediate with --ca-file instead of turning checks off.
+merge: adds new rows by id ("wl-YYYYMMDDHHMM", Bangkok time, same ids as the war room's CSV import),
+keeps the last KEEP_DAYS days, and leaves the file untouched when nothing is new."""
+import sys, json, re, ssl, time, argparse, datetime as dt, urllib.request, http.cookiejar
+from html.parser import HTMLParser
+
+URL = "https://weather.bangkok.go.th/water/StationDetail?id=103"
+STATION, NAME = "WL.RJK.01", "ปตร.คลองรางจาก-ประชาอุทิศ"
+THRESH = {"warnIn": 0.55, "critIn": 0.60, "warnOut": 1.0, "critOut": 1.2}
+SRC, KEEP_DAYS = "bma-server:WL.RJK.01", 7
+BKK = dt.timezone(dt.timedelta(hours=7))
+TH_MONTHS = {m: i + 1 for i, ms in enumerate([
+    "ม.ค. มกราคม", "ก.พ. กุมภาพันธ์", "มี.ค. มีนาคม", "เม.ย. เมษายน", "พ.ค. พฤษภาคม", "มิ.ย. มิถุนายน",
+    "ก.ค. กรกฎาคม", "ส.ค. สิงหาคม", "ก.ย. กันยายน", "ต.ค. ตุลาคม", "พ.ย. พฤศจิกายน", "ธ.ค. ธันวาคม"]) for m in ms.split()}
+
+
+class TableRows(HTMLParser):
+    """Collects the text of every <td>/<th> cell, row by row, inside <table id="example">."""
+    def __init__(self, table_id="example"):
+        super().__init__(convert_charrefs=True)
+        self.tid, self.depth, self.rows, self.row, self.cell = table_id, 0, [], None, None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "table":
+            if self.depth or dict(attrs).get("id") == self.tid: self.depth += 1
+        elif self.depth == 1 and tag == "tr": self.row = []
+        elif self.depth == 1 and tag in ("td", "th") and self.row is not None: self.cell = []
+
+    def handle_endtag(self, tag):
+        if tag == "table" and self.depth: self.depth -= 1
+        elif self.depth == 1 and tag in ("td", "th") and self.cell is not None:
+            self.row.append(" ".join("".join(self.cell).split())); self.cell = None
+        elif self.depth == 1 and tag == "tr" and self.row is not None:
+            if self.row: self.rows.append(self.row)
+            self.row = None
+
+    def handle_data(self, data):
+        if self.cell is not None: self.cell.append(data)
+
+
+def parse_time(s):
+    """'15/10/2569 00:20' or '15 ต.ค. 2569 00:20' (Bangkok time, Buddhist year) -> aware datetime."""
+    m = re.search(r"(\d{1,2})/(\d{1,2})/(\d{4})\D+(\d{1,2})[:.](\d{2})", s)
+    if m: d, mo, y, hh, mi = map(int, m.groups())
+    else:
+        m = re.search(r"(\d{1,2})\s*([ก-๙.]+)\s*(\d{4})\D+(\d{1,2})[:.](\d{2})", s)
+        if not m or m[2] not in TH_MONTHS: return None
+        d, mo, y, hh, mi = int(m[1]), TH_MONTHS[m[2]], int(m[3]), int(m[4]), int(m[5])
+    if y > 2400: y -= 543
+    try: return dt.datetime(y, mo, d, hh, mi, tzinfo=BKK)
+    except ValueError: return None
+
+
+def level(s):
+    s = (s or "").strip().replace(",", "")
+    if not re.fullmatch(r"-?\d+(\.\d+)?", s): return None   # "-" or blank = no reading
+    v = float(s)
+    return v if -2 <= v <= 4 else None
+
+
+def rows_from_html(html):
+    p = TableRows(); p.feed(html); out = {}
+    for cells in p.rows:
+        for i, c in enumerate(cells):
+            t = parse_time(c)
+            if t: break
+        else: continue
+        win, wout = (level(cells[i + 1]) if len(cells) > i + 1 else None), (level(cells[i + 2]) if len(cells) > i + 2 else None)
+        if win is None and wout is None: continue
+        rid = "wl-" + t.strftime("%Y%m%d%H%M")
+        out[rid] = {"id": rid, "t": int(t.timestamp() * 1000), "wlIn": win, "wlOut": wout, "est": False, "src": SRC}
+    return sorted(out.values(), key=lambda r: r["t"]), len(p.rows)
+
+
+def fetch(url, ca_file=None):
+    ctx = ssl.create_default_context()          # verifies certificates and host name
+    if ca_file: ctx.load_verify_locations(ca_file)
+    op = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx),
+                                     urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml", "Accept-Language": "th,en;q=0.8"})
+    last = None
+    for attempt in range(3):
+        try:
+            with op.open(req, timeout=40) as r:
+                return r.read().decode(r.headers.get_content_charset() or "utf-8", "replace")
+        except Exception as e:
+            last = e; time.sleep(5 * (attempt + 1))
+    raise SystemExit(f"fetch failed: {last}")
+
+
+def cmd_fetch(a):
+    html = open(a.html, encoding="utf-8").read() if a.html else fetch(a.url, a.ca_file)
+    rows, n = rows_from_html(html)
+    if not rows:
+        raise SystemExit(f"no readings found (table rows seen: {n}). The page layout may have changed or a bot check was shown.")
+    if not a.html and time.time() * 1000 - rows[-1]["t"] > 6 * 3600 * 1000:
+        print(f"warning: newest reading is old ({dt.datetime.fromtimestamp(rows[-1]['t'] / 1000, BKK):%d/%m %H:%M})", file=sys.stderr)
+    json.dump(rows, sys.stdout, ensure_ascii=False); print()
+    print(f"{len(rows)} readings, newest {dt.datetime.fromtimestamp(rows[-1]['t'] / 1000, BKK):%Y-%m-%d %H:%M} "
+          f"in {rows[-1]['wlIn']} out {rows[-1]['wlOut']}", file=sys.stderr)
+
+
+def cmd_merge(a):
+    rows = json.load(open(a.rows, encoding="utf-8"))
+    try: cur = json.load(open(a.target, encoding="utf-8"))
+    except FileNotFoundError: cur = {}
+    have = {r["id"]: r for r in cur.get("readings", [])}
+    new = [r for r in rows if have.get(r["id"]) != r]
+    if not new: print(0); return
+    have.update({r["id"]: r for r in new})
+    cut = (time.time() - KEEP_DAYS * 86400) * 1000
+    out = {"station": STATION, "name": NAME, "source": URL, **THRESH, "fetchedAt": int(time.time() * 1000),
+           "readings": sorted((r for r in have.values() if r["t"] >= cut), key=lambda r: r["t"])}
+    with open(a.target, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":")); f.write("\n")
+    print(len(new))
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sp = ap.add_subparsers(dest="cmd", required=True)
+    f = sp.add_parser("fetch"); f.add_argument("--url", default=URL); f.add_argument("--html"); f.add_argument("--ca-file")
+    m = sp.add_parser("merge"); m.add_argument("rows"); m.add_argument("target")
+    a = ap.parse_args()
+    cmd_fetch(a) if a.cmd == "fetch" else cmd_merge(a)
