@@ -9,7 +9,7 @@
 ## ติดตั้ง (ครั้งเดียว)
 
 ```bash
-sudo apt install -y git python3            # ถ้ามีอยู่แล้วข้ามได้
+sudo yum install -y git python3            # CentOS/RHEL (Ubuntu/Debian ใช้ apt install) ถ้ามีอยู่แล้วข้ามได้
 ssh-keygen -t ed25519 -f ~/.ssh/pruklada_deploy -N "" -C canal-bot
 cat ~/.ssh/pruklada_deploy.pub              # คัดลอกบรรทัดนี้
 ```
