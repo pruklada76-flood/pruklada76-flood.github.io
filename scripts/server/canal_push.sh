@@ -11,7 +11,7 @@ main() {
   local repo="${CANAL_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
   local key="${CANAL_KEY:-$HOME/.ssh/pruklada_deploy}"
   export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o BatchMode=yes"
-  local tmp; tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+  tmp="$(mktemp -d)"; trap 'rm -rf "${tmp:?}"' EXIT   # global, not local: the EXIT trap runs after main() returns
   exec 9>"${TMPDIR:-/tmp}/canal_push.lock"
   flock -n 9 || { echo "$(date '+%F %T') another run is still going"; return 0; }
   cd "$repo"
