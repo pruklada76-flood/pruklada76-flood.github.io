@@ -26,12 +26,6 @@ sub('async function saveState(){', 'async function saveState(){if(mode==="public
 sub('<div class="acts" id="actions" aria-live="polite"></div>',
     '<div id="simBar" style="display:none;position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:60;max-width:760px;margin:0 auto;box-shadow:0 6px 24px rgba(0,0,0,.25);gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;background:var(--panel);color:var(--ink);border:2px dashed var(--fc4);font-size:15px"><span><b>โหมดจำลอง</b> · ตัวเลขบนจอนี้เปลี่ยนตามที่คุณกด ไม่ใช่สถานะจริงของปั๊มและประตูน้ำ</span><button type="button" id="simReset" style="flex:none;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer">กลับค่าจริง</button></div>\n  <div class="acts" id="actions" aria-live="polite"></div>')
 
-# Canal level row: shows "automatic" once the village server has pushed data/canal-rjk.json in the last 24 h.
-sub('    ["🏞","ระดับคลองรางจาก WL.RJK.01","man","อัปโหลด CSV จากเว็บ กทม. (ระบบดึงเองไม่ได้ เว็บ กทม. ปิดกั้น)",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),null],',
-    '    (()=>{const ts=last(r=>/^bma-server:/.test(r.src||""));return ts!=null&&Date.now()-ts<24*H?["🏞","ระดับคลองรางจาก WL.RJK.01","auto","ทุกชั่วโมง (เครื่องเซิร์ฟเวอร์หมู่บ้านดึงจากเว็บ กทม.)",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),150]:["🏞","ระดับคลองรางจาก WL.RJK.01","man","อัปโหลด CSV จากเว็บ กทม. (ระบบดึงเองไม่ได้ เว็บ กทม. ปิดกั้น)",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),null]})(),')
-# Rain row: "automatic" once the village server has pushed data/rain-tku.json in the last 24 h.
-sub('    ["🌧","ฝนสถานีจริง กทม. (CSV)","man","อัปโหลดเมื่อฝนตก (แม่นสุด)",last(r=>!r.est&&num(r.rain)!=null&&!/^thaiwater:/.test(r.src||"")),null],',
-    '    (()=>{const ts=last(r=>r.src==="bma-server:rain");return ts!=null&&Date.now()-ts<24*H?["🌧","ฝนสถานีจริง กทม. (ทุก 5 นาที)","auto","ทุกชั่วโมง (เครื่องเซิร์ฟเวอร์หมู่บ้านดึงจากเว็บ กทม.)",last(r=>!r.est&&num(r.rain)!=null&&!/^thaiwater:/.test(r.src||"")),150]:["🌧","ฝนสถานีจริง กทม. (CSV)","man","อัปโหลดเมื่อฝนตก (แม่นสุด)",last(r=>!r.est&&num(r.rain)!=null&&!/^thaiwater:/.test(r.src||"")),null]})(),')
 # Replace the artifact-database connection with a loader for data/*.json.
 start = src.index("async function connect(){")
 end = src.index("/* ---------- events ---------- */")
