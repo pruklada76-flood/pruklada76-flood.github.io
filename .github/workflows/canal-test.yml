@@ -1,0 +1,16 @@
+name: canal test (BMA from GitHub)
+on:
+  push:
+    branches: [claude/project-thread-k5ph0p]
+    paths: [".github/workflows/canal-test.yml", "scripts/server/bma_canal.py"]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: HTTP status
+        run: curl -sS -o page.html -w "HTTP %{http_code} bytes %{size_download}\n" -A "Mozilla/5.0 (X11; Linux x86_64) Chrome/124.0" "https://weather.bangkok.go.th/water/StationDetail?id=103" || true
+      - name: parse
+        run: python3 -I scripts/server/bma_canal.py fetch > rows.json; tail -c 400 rows.json
