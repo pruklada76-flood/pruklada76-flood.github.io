@@ -29,6 +29,9 @@ sub('<div class="acts" id="actions" aria-live="polite"></div>',
 # Canal level row: shows "automatic" once the village server has pushed data/canal-rjk.json in the last 24 h.
 sub('    ["🏞","ระดับคลองรางจาก WL.RJK.01","man","อัปโหลด CSV จากเว็บ กทม. (ระบบดึงเองไม่ได้ เว็บ กทม. ปิดกั้น)",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),null],',
     '    (()=>{const ts=last(r=>/^bma-server:/.test(r.src||""));return ts!=null&&Date.now()-ts<24*H?["🏞","ระดับคลองรางจาก WL.RJK.01","auto","ทุกชั่วโมง (เครื่องเซิร์ฟเวอร์หมู่บ้านดึงจากเว็บ กทม.)",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),150]:["🏞","ระดับคลองรางจาก WL.RJK.01","man","อัปโหลด CSV จากเว็บ กทม. (ระบบดึงเองไม่ได้ เว็บ กทม. ปิดกั้น)",last(r=>num(r.wlIn)!=null||num(r.wlOut)!=null),null]})(),')
+# Rain row: "automatic" once the village server has pushed data/rain-tku.json in the last 24 h.
+sub('    ["🌧","ฝนสถานีจริง กทม. (CSV)","man","อัปโหลดเมื่อฝนตก (แม่นสุด)",last(r=>!r.est&&num(r.rain)!=null&&!/^thaiwater:/.test(r.src||"")),null],',
+    '    (()=>{const ts=last(r=>r.src==="bma-server:rain");return ts!=null&&Date.now()-ts<24*H?["🌧","ฝนสถานีจริง กทม. (ทุก 5 นาที)","auto","ทุกชั่วโมง (เครื่องเซิร์ฟเวอร์หมู่บ้านดึงจากเว็บ กทม.)",last(r=>!r.est&&num(r.rain)!=null&&!/^thaiwater:/.test(r.src||"")),150]:["🌧","ฝนสถานีจริง กทม. (CSV)","man","อัปโหลดเมื่อฝนตก (แม่นสุด)",last(r=>!r.est&&num(r.rain)!=null&&!/^thaiwater:/.test(r.src||"")),null]})(),')
 # Replace the artifact-database connection with a loader for data/*.json.
 start = src.index("async function connect(){")
 end = src.index("/* ---------- events ---------- */")
@@ -38,12 +41,13 @@ document.addEventListener("click",e=>{if(e.target&&e.target.id==="simReset"){SIM
 async function connect(){
   mode="public";canWrite=false;lockForm();
   const g=async f=>{try{const r=await fetch("data/"+f+"?v="+Date.now(),{cache:"no-store"});return r.ok?await r.json():null}catch(e){return null}};
-  const [rd,fc,st,pr,meta,cw]=await Promise.all([g("readings.json"),g("forecasts.json"),g("state.json"),g("params.json"),g("meta.json"),g("canal-rjk.json")]);
+  const [rd,fc,st,pr,meta,cw,rw]=await Promise.all([g("readings.json"),g("forecasts.json"),g("state.json"),g("params.json"),g("meta.json"),g("canal-rjk.json"),g("rain-tku.json")]);
   META=meta;if(pr)P=mergeParams(pr);
   if(st){const keep=pubFirst?null:S.scI,keepH=S.scH,simP=S.pumps,simG=S.gate;REAL=mergeState(st);S=mergeState(st);S.scI=keep;if(!pubFirst)S.scH=keepH;if(SIM){S.pumps=simP;S.gate=simG}}
   if(Array.isArray(rd))R=rd.filter(r=>r&&num(r.t)!=null).sort((a,b)=>b.t-a.t);
   // Canal level WL.RJK.01 pushed by the village server (data/canal-rjk.json); same ids as the CSV import, so no duplicates.
-  if(cw&&Array.isArray(cw.readings)){const ids=new Set(R.map(r=>r.id));R=R.concat(cw.readings.filter(r=>r&&num(r.t)!=null&&!ids.has(r.id))).sort((a,b)=>b.t-a.t)}
+  // Rain RF.TKU.01 every 5 min from the same server (data/rain-tku.json); ids match the CSV import (rf-...).
+  for(const x of [cw,rw])if(x&&Array.isArray(x.readings)){const ids=new Set(R.map(r=>r.id));R=R.concat(x.readings.filter(r=>r&&num(r.t)!=null&&!ids.has(r.id))).sort((a,b)=>b.t-a.t)}
   if(Array.isArray(fc))FC=fc.map(cleanFC);
   if(pubFirst){$("scI").value="";pubFirst=false}
   const up=meta&&meta.updatedAt?" · อัปเดตล่าสุด "+dhm(meta.updatedAt):"";

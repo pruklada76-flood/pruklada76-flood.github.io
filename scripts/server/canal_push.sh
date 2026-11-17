@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Run from cron on the village server: fetch WL.RJK.01 from the BMA site and push data/canal-rjk.json.
+# Run from cron on the village server: fetch canal WL.RJK.01 and rain RF.TKU.01 from the BMA site and push
+# data/canal-rjk.json and data/rain-tku.json.
 # Needs: git, python3, a clone of this repo made with a write-enabled deploy key (see scripts/server/README.md).
 # Settings via environment (all optional):
 #   CANAL_REPO   path of the clone              (default: the repo this script lives in)
@@ -18,15 +19,25 @@ main() {
   git fetch -q origin main && git reset -q --hard origin/main     # this clone is only for the bot
 
   local ca=(); [ -n "${CANAL_CA:-}" ] && ca=(--ca-file "$CANAL_CA")
-  python3 -I scripts/server/bma_canal.py fetch "${ca[@]}" > "$tmp/rows.json"
+  local kinds="" k
+  # canal -> data/canal-rjk.json, rain -> data/rain-tku.json; one failing does not stop the other
+  for k in canal rain; do
+    if python3 -I scripts/server/bma_canal.py fetch --kind "$k" ${ca[@]+"${ca[@]}"} > "$tmp/$k.json"; then kinds="$kinds $k"
+    else echo "$(date '+%F %T') $k fetch failed"; fi
+  done
+  [ -n "$kinds" ] || return 1
 
   for attempt in 1 2 3 4; do
-    local n; n="$(python3 -I scripts/server/bma_canal.py merge "$tmp/rows.json" data/canal-rjk.json)"
-    if [ "$n" = "0" ]; then echo "$(date '+%F %T') no new readings"; return 0; fi
-    git add data/canal-rjk.json
+    local msg="" n
+    for k in $kinds; do
+      local f=data/canal-rjk.json; [ "$k" = rain ] && f=data/rain-tku.json
+      n="$(python3 -I scripts/server/bma_canal.py merge --kind "$k" "$tmp/$k.json" "$f")"
+      if [ "$n" != "0" ]; then git add "$f"; msg="$msg $k +$n"; fi
+    done
+    if [ -z "$msg" ]; then echo "$(date '+%F %T') no new readings"; return 0; fi
     git -c user.name="village-canal-bot" -c user.email="canal-bot@users.noreply.github.com" \
-      commit -q -m "data: canal WL.RJK.01 from village server ($n new)"
-    if git push -q origin HEAD:main; then echo "$(date '+%F %T') pushed $n new readings"; return 0; fi
+      commit -q -m "data: BMA from village server:$msg"
+    if git push -q origin HEAD:main; then echo "$(date '+%F %T') pushed:$msg"; return 0; fi
     echo "push rejected (attempt $attempt), retrying"; sleep $((attempt * 10))
     git fetch -q origin main && git reset -q --hard origin/main
   done
