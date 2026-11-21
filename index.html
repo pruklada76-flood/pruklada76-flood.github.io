@@ -873,7 +873,8 @@ function drawCharts(sim,pr,scI,scH,live){
       const thl=[[th.warnIn,"var(--warn)","เตือนภัย "+th.warnIn.toFixed(2),""],[th.critIn,"var(--crit)","วิกฤต "+th.critIn.toFixed(2),""]];
       if(showOut)thl.push([th.warnOut,"var(--warn)","เตือนภัยด้านนอก","2 4"],[th.critOut,"var(--crit)","วิกฤตด้านนอก","2 4"]);
       thl.forEach(([v,c,l,da],i)=>{const rt=i%2===0;s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="${c}" stroke-width="1.5" ${da?`stroke-dasharray="${da}"`:""}/><text x="${rt?W-padR-4:padL+4}" y="${(Y(v)+(rt?12:-4)).toFixed(1)}" text-anchor="${rt?"end":"start"}" class="lbl" style="fill:${c}">${l}</text>`});
-      const line=(f,da)=>{const pts=wv.filter(r=>num(r[f])!=null);if(!pts.length)return "";return `<path d="${pts.map((r,i)=>(i?"L":"M")+X2(r.t).toFixed(1)+" "+Y(num(r[f])).toFixed(1)).join(" ")}" fill="none" stroke="var(--water)" stroke-width="${da?1.6:2.4}" ${da?`stroke-dasharray="${da}" opacity=".7"`:""} stroke-linejoin="round"/>`};
+      const GAP=45*60e3;for(let i=1;i<wv.length;i++){const a=wv[i-1].t,b=wv[i].t;if(b-a>3*H){const x1=X2(a),x2=X2(b);s+=`<rect x="${x1.toFixed(1)}" y="${top}" width="${(x2-x1).toFixed(1)}" height="${Hh-top-bot}" fill="var(--grid)" opacity=".55"><title>ไม่มีข้อมูล ${dhm(a)} – ${dhm(b)}</title></rect>`+(x2-x1>34?`<text x="${((x1+x2)/2).toFixed(1)}" y="${Hh-bot-5}" text-anchor="middle" class="lbl" style="fill:var(--ink3)">ไม่มีข้อมูล</text>`:"")}}
+      const line=(f,da)=>{const pts=wv.filter(r=>num(r[f])!=null);if(!pts.length)return "";return `<path d="${pts.map((r,i)=>(i&&r.t-pts[i-1].t<=GAP?"L":"M")+X2(r.t).toFixed(1)+" "+Y(num(r[f])).toFixed(1)).join(" ")}" fill="none" stroke="var(--water)" stroke-width="${da?1.6:2.4}" ${da?`stroke-dasharray="${da}" opacity=".7"`:""} stroke-linejoin="round"/>`};
       s+=line("wlOut","5 4")+line("wlIn","");
       for(const r of wv)if(num(r.wlIn)!=null)s+=`<circle cx="${X2(r.t).toFixed(1)}" cy="${Y(num(r.wlIn)).toFixed(1)}" r="5" fill="transparent"><title>${dhm(r.t)} · ด้านใน ${num(r.wlIn).toFixed(2)} ม.${num(r.wlOut)!=null?" · ด้านนอก "+num(r.wlOut).toFixed(2)+" ม.":""}</title></circle>`;
       $("chartWl").innerHTML=s+`</svg>`;const l=wv[wv.length-1],li=num(l.wlIn);
@@ -884,7 +885,7 @@ function drawCharts(sim,pr,scI,scH,live){
       let s=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="กราฟระดับแม่น้ำเจ้าพระยา">`;
       for(let i=0;i<=2;i++){const v=lo+(hi-lo)*i/2;s+=`<line x1="${padL}" x2="${W-padR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${v.toFixed(2)}</text>`}
       for(const t of ticks)if(t<=now)s+=`<text x="${X2(t).toFixed(1)}" y="${Hh-5}" text-anchor="middle">${tl(t)}</text>`;
-      const d=rv.map((r,i)=>(i?"L":"M")+X2(r.t).toFixed(1)+" "+Y(num(r.river)).toFixed(1)).join(" ");
+      const d=rv.map((r,i)=>(i&&r.t-rv[i-1].t<=3*H?"L":"M")+X2(r.t).toFixed(1)+" "+Y(num(r.river)).toFixed(1)).join(" ");
       s+=`<path d="${d}" fill="none" stroke="var(--water)" stroke-width="2.2" stroke-linejoin="round"/>`;
       for(const r of rv)s+=`<circle cx="${X2(r.t).toFixed(1)}" cy="${Y(num(r.river)).toFixed(1)}" r="${rv.length>40?1.5:3}" fill="var(--water)"><title>${dhm(r.t)} · ${num(r.river).toFixed(2)} ม.รทก.</title></circle>`;
       $("chartRiver").innerHTML=s+`</svg>`;const l=rv[rv.length-1];$("riverNow").textContent=num(l.river).toFixed(2)+" ม. · "+dhm(l.t)}}
