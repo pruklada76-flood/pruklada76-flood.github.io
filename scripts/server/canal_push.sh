@@ -3,13 +3,19 @@
 # data/canal-rjk.json and data/rain-tku.json.
 # Needs: git, python3, a clone of this repo made with a write-enabled deploy key (see scripts/server/README.md).
 # Settings via environment (all optional):
-#   CANAL_REPO   path of the clone              (default: the repo this script lives in)
+#   CANAL_REPO   path of the clone              (default: the repo this script lives in, else ~/canal-bot)
 #   CANAL_KEY    SSH private key for the deploy key (default: ~/.ssh/pruklada_deploy)
 #   CANAL_CA     extra CA/intermediate PEM for the BMA site, only if TLS verification fails
 # The whole body is inside main() so bash parses it before `git reset` can replace this file.
 main() {
   set -euo pipefail
-  local repo="${CANAL_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+  # bma_canal.py is run from the folder this script is in, not from the clone. Copy both files to a folder
+  # outside the clone (see README, "hardening") so a push to the repo can never run new code on the server.
+  local here; here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local repo="${CANAL_REPO:-}"
+  if [ -z "$repo" ]; then
+    if [ -d "$here/../../.git" ]; then repo="$(cd "$here/../.." && pwd)"; else repo="$HOME/canal-bot"; fi
+  fi
   local key="${CANAL_KEY:-$HOME/.ssh/pruklada_deploy}"
   export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o BatchMode=yes"
   tmp="$(mktemp -d)"; trap 'rm -rf "${tmp:?}"' EXIT   # global, not local: the EXIT trap runs after main() returns
@@ -22,7 +28,7 @@ main() {
   local kinds="" k
   # canal -> data/canal-rjk.json, rain -> data/rain-tku.json; one failing does not stop the other
   for k in canal rain; do
-    if python3 -I scripts/server/bma_canal.py fetch --kind "$k" ${ca[@]+"${ca[@]}"} > "$tmp/$k.json"; then kinds="$kinds $k"
+    if python3 -I "$here/bma_canal.py" fetch --kind "$k" ${ca[@]+"${ca[@]}"} > "$tmp/$k.json"; then kinds="$kinds $k"
     else echo "$(date '+%F %T') $k fetch failed"; fi
   done
   [ -n "$kinds" ] || return 1
@@ -31,7 +37,7 @@ main() {
     local msg="" n
     for k in $kinds; do
       local f=data/canal-rjk.json; [ "$k" = rain ] && f=data/rain-tku.json
-      n="$(python3 -I scripts/server/bma_canal.py merge --kind "$k" "$tmp/$k.json" "$f")"
+      n="$(python3 -I "$here/bma_canal.py" merge --kind "$k" "$tmp/$k.json" "$f")"
       if [ "$n" != "0" ]; then git add "$f"; msg="$msg $k +$n"; fi
     done
     if [ -z "$msg" ]; then echo "$(date '+%F %T') no new readings"; return 0; fi
