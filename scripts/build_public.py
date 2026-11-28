@@ -51,7 +51,12 @@ async function connect(){
 setInterval(()=>{if(!document.hidden)connect()},5*60*1000);
 
 ''' + src[end:]
-head = ('<!doctype html><html lang="th"><head><meta charset="utf-8">'
+# Only accept known pump states from data/state.json (they go into HTML attributes).
+src = src.replace('o.pumps=Object.assign({},x.pumps)',
+                  'o.pumps=Object.fromEntries(Object.entries(x.pumps).filter(([k,v])=>/^p\\d+$/.test(k)&&["run","stand","down"].includes(v)))')
+# CSP: no scripts, styles or requests from other sites except Google Fonts.
+CSP = ('<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src \'self\' data:; connect-src \'self\'; object-src \'none\'; base-uri \'none\'; form-action \'none\'"><meta name="referrer" content="strict-origin-when-cross-origin">')
+head = ('<!doctype html><html lang="th"><head><meta charset="utf-8">' + CSP +
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
         '<style>html,body{margin:0;padding:0}</style></head><body>\n')
 out.write_text(head + src + "\n</body></html>\n", encoding="utf-8")

@@ -58,3 +58,27 @@ python3 -I ~/canal-bot/scripts/server/bma_canal.py fetch > /dev/null   # ต้�
 
 ห้องสั่งการไม่ได้อ่านไฟล์นี้เอง ระบบดึงข้อมูลรายชั่วโมงสามารถอ่าน
 `https://pruklada76-flood.github.io/data/canal-rjk.json` แล้วเพิ่มแถวที่ยังไม่มี (id `wl-YYYYMMDDHHMM` ชุดเดียวกับการนำเข้า CSV จึงไม่ซ้ำ)
+
+## เพิ่มความปลอดภัย (แนะนำ ทำครั้งเดียว)
+
+ตอนนี้ cron รันสคริปต์จากในโฟลเดอร์ clone ซึ่งอัปเดตตาม repo ทุกชั่วโมง ถ้าวันหนึ่งมีคนแอบแก้ไฟล์ใน repo ได้
+เขาจะได้สั่งงานเครื่องเซิร์ฟเวอร์ (ซึ่งเป็นเครื่องเมลด้วย) ทางแก้คือเก็บสคริปต์ไว้นอก clone แล้วให้ cron เรียกตัวนั้น
+clone มีไว้เก็บข้อมูลอย่างเดียว
+
+```bash
+mkdir -p ~/canal-bin
+cp ~/canal-bot/scripts/server/canal_push.sh ~/canal-bot/scripts/server/bma_canal.py ~/canal-bin/
+chmod 700 ~/canal-bin ~/canal-bin/canal_push.sh
+crontab -e   # เปลี่ยนบรรทัดเดิมเป็น:
+# 7 * * * * CANAL_REPO=$HOME/canal-bot $HOME/canal-bin/canal_push.sh >> $HOME/canal-bot.log 2>&1
+```
+
+ถ้าทีมแก้สคริปต์ใน repo ในอนาคต ให้ดูการเปลี่ยนแปลงก่อน แล้วค่อย `cp` สองไฟล์นี้ใหม่
+
+สิทธิ์ของผู้ใช้ `canalbot` (สั่งเป็น root):
+
+```bash
+passwd -l canalbot                      # ไม่มีรหัสผ่าน ล็อกอินด้วยรหัสไม่ได้
+gpasswd -d canalbot wheel 2>/dev/null   # ไม่มี sudo
+chmod 700 ~canalbot ~canalbot/.ssh && chmod 600 ~canalbot/.ssh/pruklada_deploy ~canalbot/.ssh/config
+```
